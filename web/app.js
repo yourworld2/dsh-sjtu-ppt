@@ -2,6 +2,7 @@
    纯原生 JS：模板卡、封面实时预览、正文页编辑、生成与最近文件。 */
 
 const STORE_KEY = 'sjtu-ppt:draft:v1'
+const THUMB_BASE = '/sjtu-ppt/assets/thumbs/'
 const $ = (sel, root = document) => root.querySelector(sel)
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)]
 
@@ -184,7 +185,22 @@ function renderHero() {
 
 /* ── 模板 ─────────────────────────────────────────────── */
 
+function thumbFor(t) {
+  if (t.thumb) return t.thumb
+  if (!t.file) return ''
+  return `${THUMB_BASE}${t.file.replace(/\.pptx$/i, '.jpg')}`
+}
+
+function syncTemplateActive() {
+  for (const card of $$('.tpl-card', els.grid)) {
+    const active = card.dataset.template === state.tId
+    card.classList.toggle('active', active)
+    card.setAttribute('aria-pressed', active ? 'true' : 'false')
+  }
+}
+
 function renderTemplates() {
+  const scroll = els.grid ? els.grid.scrollLeft : 0
   clear(els.grid)
   for (const t of state.templates) {
     const active = t.id === state.tId
@@ -195,7 +211,23 @@ function renderTemplates() {
       'aria-pressed': active ? 'true' : 'false',
       'aria-label': `${t.label} ${t.name} 模板`,
     })
-    card.append(buildMock(t, { title: '饮水思源', subtitle: '上海交通大学', meta: 'SJTU · 2026' }))
+    const mock = () => buildMock(t, { title: '饮水思源', subtitle: '上海交通大学', meta: 'SJTU · 2026' })
+    const src = thumbFor(t)
+    if (src) {
+      const wrap = el('div', { className: 'tpl-thumb-wrap' })
+      const img = el('img', {
+        className: 'tpl-thumb',
+        src,
+        alt: `${t.label} ${t.name} 模板整页封面`,
+        loading: 'lazy',
+        decoding: 'async',
+      })
+      img.addEventListener('error', () => wrap.replaceWith(mock()), { once: true })
+      wrap.append(img)
+      card.append(wrap)
+    } else {
+      card.append(mock())
+    }
     card.append(el('span', { className: 'tpl-check', text: '✓' }))
     card.append(
       el(
@@ -208,6 +240,22 @@ function renderTemplates() {
     )
     els.grid.append(card)
   }
+  if (els.grid) els.grid.scrollLeft = scroll
+  requestAnimationFrame(updateTemplateNav)
+}
+
+function updateTemplateNav() {
+  if (!els.grid || !els.tplPrev || !els.tplNext) return
+  const max = els.grid.scrollWidth - els.grid.clientWidth
+  els.tplPrev.disabled = els.grid.scrollLeft <= 2
+  els.tplNext.disabled = max <= 2 || els.grid.scrollLeft >= max - 2
+}
+
+function scrollTemplates(direction) {
+  if (!els.grid) return
+  const card = els.grid.querySelector('.tpl-card')
+  const step = (card ? card.getBoundingClientRect().width : 232) + 14
+  els.grid.scrollBy({ left: direction * step * 2, behavior: 'smooth' })
 }
 
 function renderFacts() {
@@ -242,7 +290,7 @@ function renderFacts() {
 function setTemplate(id) {
   if (!state.templates.some((t) => t.id === id)) return
   state.tId = id
-  renderTemplates()
+  syncTemplateActive()
   renderFacts()
   renderHero()
   updateSummary()
@@ -780,6 +828,8 @@ async function checkHealth() {
 
 async function boot() {
   els.grid = $('#templateGrid')
+  els.tplPrev = $('#tplPrev')
+  els.tplNext = $('#tplNext')
   els.tplFacts = $('#tplFacts')
   els.heroCover = $('#heroCover')
   els.heroTemplateName = $('#heroTemplateName')
@@ -843,6 +893,11 @@ function bind() {
     const card = event.target.closest('[data-template]')
     if (card) setTemplate(card.dataset.template)
   })
+
+  els.tplPrev.addEventListener('click', () => scrollTemplates(-1))
+  els.tplNext.addEventListener('click', () => scrollTemplates(1))
+  els.grid.addEventListener('scroll', updateTemplateNav, { passive: true })
+  addEventListener('resize', updateTemplateNav)
 
   document.addEventListener('click', (event) => {
     const add = event.target.closest('[data-add]')

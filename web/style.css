@@ -853,16 +853,72 @@ code {
   text-align: right;
 }
 
+.head-tools {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.strip-nav {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+
+.strip-nav button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--card);
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.strip-nav button:hover:not(:disabled) {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.strip-nav button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
 /* ── template grid ───────────────────────────────────── */
 
 .template-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
   gap: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px 12px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  overscroll-behavior-x: contain;
+}
+
+.template-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.template-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.template-grid::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ink) 18%, transparent);
+  border-radius: 99px;
 }
 
 .tpl-card {
   position: relative;
+  flex: 0 0 232px;
+  scroll-snap-align: start;
   padding: 9px 9px 13px;
   background: var(--card);
   border: 1px solid var(--line);
@@ -883,9 +939,30 @@ code {
   box-shadow: 0 0 0 1px var(--red), var(--shadow-s);
 }
 
-.tpl-card .mock {
+.tpl-card .mock,
+.tpl-thumb-wrap {
   border-radius: 8px;
   overflow: hidden;
+}
+
+/* 模板缩略图：按文件名一一对应，contain 完整展示整张长图，不裁切 */
+.tpl-thumb-wrap {
+  position: relative;
+  aspect-ratio: 1212 / 3411;
+  display: grid;
+  place-items: center;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+}
+
+.tpl-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .tpl-check {
@@ -1730,8 +1807,8 @@ code {
     gap: 34px;
   }
 
-  .template-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .tpl-card {
+    flex-basis: 210px;
   }
 }
 
@@ -1765,8 +1842,14 @@ code {
     position: static;
   }
 
-  .template-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .tpl-card {
+    flex-basis: 196px;
+  }
+
+  .head-tools {
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 
@@ -1802,8 +1885,8 @@ code {
     gap: 8px;
   }
 
-  .template-grid {
-    grid-template-columns: 1fr;
+  .tpl-card {
+    flex-basis: 176px;
   }
 
   .tpl-tagline {

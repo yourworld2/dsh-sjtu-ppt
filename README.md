@@ -113,6 +113,10 @@ $DSH_HOME/sjtu-ppt/out/<id>/
 
 内置模板没有「左 / 右」占位符，`left` / `right` 双栏字段只对用户自带的 `.pptx` 模板生效。
 
+![模板海报条](docs/templates.png)
+
+模板卡片的缩略图在 `web/assets/thumbs/`，文件名与 `skills/sjtu-ppt/assets/*.pptx` 一一对应：`SJTU-wine.pptx` → `SJTU-wine.jpg`。卡片是横向海报条，默认用 `object-fit: contain` 完整展示整张长图（5 页拼接），不裁切；替换同名图片即可换缩略图。
+
 ## 内容 JSON
 
 ```json
