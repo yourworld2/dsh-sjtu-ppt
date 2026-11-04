@@ -15,9 +15,15 @@
 
 ## 安装
 
-### 在 DSH 的插件页安装
+### 从 GitHub 安装（推荐）
 
-插件页支持从本地路径安装。选这个目录：
+仓库：**https://github.com/yourworld2/dsh-sjtu-ppt**
+
+DSH → 左侧 **Plugins** → **Add plugin** → 填上面的地址 → **Install** → 刷新页面。侧栏会出现「交大演示」。
+
+### 从本地目录安装
+
+解压分享包，或直接用仓库目录。在 **Plugins → Add plugin** 里选这个目录：
 
 ```
 <你存放插件的路径>/dsh-sjtu-ppt
@@ -25,7 +31,7 @@
 
 安装后确认它出现在该 profile 的组合包列表里（`dsh.profile.bundles`）。侧栏出现「交大演示」即可。
 
-> 开发时可以用 `link:` 装；分享给别人时，发下面的 zip / tgz，或推到 GitHub / npm。
+> 开发时可以用 `link:` 装；也可以把仓库打成 zip / tgz 发给同事。
 
 ### 手动安装
 
