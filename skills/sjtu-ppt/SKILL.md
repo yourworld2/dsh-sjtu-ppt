@@ -64,7 +64,7 @@ dependency:
 - 脚本：见 [scripts/list_templates.py](scripts/list_templates.py)（用途：扫描 assets/ 目录，自动索引所有 .pptx 模板，输出包含布局名称、类型、占位符等信息的 JSON；参数：`--assets-dir`）
 - 脚本：见 [scripts/smoke_test.py](scripts/smoke_test.py)（用途：smoke 回归测试，对每个内置模板跑 4 类检查：基础生成 / 双栏回归 / 页码 / 嵌套 bullet，外加 1 个全局检查（图片缺失给 warning 不崩溃）。运行：`python scripts/smoke_test.py`，exit 0 = 全部通过，1 = 有失败）
 - 参考：见 [references/content-format.md](references/content-format.md)（何时读取：编写或校验内容 JSON 时）
-- 资产：见 [assets/SJTU-basic.pptx](assets/SJTU-basic.pptx)（默认内置模板：SJTU-basic 蓝灰主题，含封面/目录/内页/过渡页/封底五种布局；内页支持页码）
+- 资产：见 [assets/SJTU-basic.pptx](assets/SJTU-basic.pptx)（默认内置模板：SJTU-basic 交大红主题，含封面/目录/内页/过渡页/封底五种布局；内页支持页码）
 - 资产：见 [assets/SJTU-wine.pptx](assets/SJTU-wine.pptx)（可选内置模板：SJTU-wine 酒红主题，配色为红 RGB(166,32,56)、浅金 RGB(224,207,189)、灰 RGB(191,191,191)，含封面/目录/过渡页/正文页/封底五种布局；目录/内页/过渡页支持页码）
 - 资产：见 [assets/SJTU-130.pptx](assets/SJTU-130.pptx)（可选内置模板：SJTU-130 红色主题，含封面/目录/内页/过渡页/封底五种布局；内页支持页码）
 - 资产：见 [assets/SJTU-crimson.pptx](assets/SJTU-crimson.pptx)（可选内置模板：SJTU-crimson 深红主题，含封面/目录/过渡页/正文页/封底五种布局；目录/内页/过渡页支持页码）
