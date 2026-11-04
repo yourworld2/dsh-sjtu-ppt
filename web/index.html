@@ -25,24 +25,36 @@
 
       <main id="top">
         <section class="hero">
-          <div class="hero-copy">
-            <p class="eyebrow"><span class="tick"></span>8 TEMPLATES · 5 LAYOUTS · PPTX</p>
+          <span class="hero-mark" aria-hidden="true">交</span>
+          <div class="hero-main">
+            <div class="hero-topline">
+              <p class="eyebrow"><span class="tick"></span>SJTU DECK STUDIO <span class="slash">/</span> 交大模板工作台</p>
+              <span class="hero-stamp">1896 · 饮水思源</span>
+            </div>
             <h1>把大纲，排成一份<br /><em>交大模板</em>的 PPT。</h1>
             <p class="lede">
               八套上海交大模板，封面、目录、内页、过渡、封底都在。填好内容直接下载可编辑的
               <code>.pptx</code>；也可以把大纲交给 AI，在对话里写完再回来。
             </p>
-            <div class="hero-actions">
-              <a class="btn primary lg" href="#compose">开始排版</a>
-              <button class="btn quiet lg" id="aiHero" type="button">让 AI 从大纲写 <span class="arrow">↗</span></button>
+            <div class="hero-bottom">
+              <div class="hero-side">
+                <div class="hero-actions">
+                  <a class="btn primary lg" href="#compose">开始排版</a>
+                  <button class="btn quiet lg" id="aiHero" type="button">让 AI 从大纲写 <span class="arrow">↗</span></button>
+                </div>
+                <div class="hero-current">
+                  <span class="hero-dot"></span>当前模板
+                  <strong id="heroTemplateName">basic · 蓝灰</strong>
+                  <span class="sep">/</span>
+                  <span id="heroPages">6 页</span>
+                </div>
+              </div>
+              <div class="hero-stats" aria-label="插件能力">
+                <div class="stat"><strong>08</strong><span>套模板</span></div>
+                <div class="stat"><strong>05</strong><span>种版式</span></div>
+                <div class="stat"><strong>01</strong><span>份可编辑 PPTX</span></div>
+              </div>
             </div>
-            <div class="hero-note">
-              <span id="heroTemplateName">basic · 蓝灰</span><i></i><span id="heroPages">6 页</span><i></i><span>可直接编辑</span>
-            </div>
-          </div>
-          <div class="hero-preview">
-            <div class="hero-frame" id="heroCover" aria-label="当前模板的封面预览"></div>
-            <div class="hero-caption"><span>COVER PREVIEW</span><span id="heroVersion">v0.1.0</span></div>
           </div>
         </section>
 

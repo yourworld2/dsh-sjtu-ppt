@@ -5,7 +5,7 @@
 - 左侧栏入口，页面在 iframe 里，明暗跟随 DSH
 - 8 套内置模板：basic / 130 / wine / crimson / origin / star / blue / global
 - 5 种版式：封面、目录、内页、过渡页、封底
-- 可视化编辑封面、目录、内页、过渡页、封底；实时封面预览；草稿自动保存
+- 可视化编辑封面、目录、内页、过渡页、封底；横向海报条预览整份模板；草稿自动保存
 - 生成后可直接下载、在 Finder 中定位；「最近生成」保留历史
 - 注册 `sjtu-ppt` 技能和 `sjtu_ppt_generate` 工具，对话里也能生成并交付
 - 使用 DSH 桌面版自带的 Python（含 python-pptx），不额外装依赖
@@ -65,7 +65,7 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 ### 可视化排版
 
 1. 侧栏点「交大演示」。
-2. 选一套模板（封面预览会实时跟随你填的标题）。
+2. 选一套模板（模板区横向滑动可看完整 5 页长图）。
 3. 填封面：主标题、副标题、汇报人、日期、是否显示页码。
 4. 加正文页：目录 / 内页 / 过渡 / 封底；内页每行一条要点，行首两个空格是二级。
 5. 点「生成 PPTX」，下载或在 Finder 中定位。

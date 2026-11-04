@@ -9,7 +9,6 @@ const $$ = (sel, root = document) => [...root.querySelectorAll(sel)]
 const state = {
   templates: [],
   layouts: [],
-  version: '',
   tId: 'basic',
   title: '',
   subtitle: '',
@@ -134,7 +133,7 @@ function toast(message, kind = '', action = null) {
   setTimeout(() => node.remove(), action ? 8000 : 4600)
 }
 
-/* ── 封面预览 ─────────────────────────────────────────── */
+/* ── 封面 mock：结果弹窗 / 缩略图兜底 ───────────────── */
 
 function buildMock(t, opts = {}) {
   if (!t) return el('div', { className: 'mock' })
@@ -175,12 +174,9 @@ function buildMock(t, opts = {}) {
 function renderHero() {
   const t = currentTemplate()
   if (!t) return
-  clear(els.heroCover)
-  els.heroCover.append(buildMock(t))
   els.heroTemplateName.textContent = `${t.name} · ${t.label}`
   const pages = visibleSlides().length + (state.title.trim() ? 1 : 0)
   els.heroPages.textContent = `${pages} 页`
-  els.heroVersion.textContent = state.version ? `v${state.version}` : ''
 }
 
 /* ── 模板 ─────────────────────────────────────────────── */
@@ -831,10 +827,8 @@ async function boot() {
   els.tplPrev = $('#tplPrev')
   els.tplNext = $('#tplNext')
   els.tplFacts = $('#tplFacts')
-  els.heroCover = $('#heroCover')
   els.heroTemplateName = $('#heroTemplateName')
   els.heroPages = $('#heroPages')
-  els.heroVersion = $('#heroVersion')
   els.fTitle = $('#fTitle')
   els.fSubtitle = $('#fSubtitle')
   els.fAuthor = $('#fAuthor')
@@ -868,7 +862,6 @@ async function boot() {
     const data = await response.json()
     state.templates = data.templates || []
     state.layouts = data.layouts || []
-    state.version = data.version || ''
     if (!state.templates.length) throw new Error('模板列表是空的')
   } catch (error) {
     toast(`加载模板失败：${error.message}`, 'error')
