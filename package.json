@@ -1,0 +1,49 @@
+{
+  "name": "dsh-sjtu-ppt",
+  "version": "0.1.0",
+  "description": "交大演示 · DeepSeek Harness 插件：把 sjtu-ppt 技能和 8 套上海交大 PPT 模板装进侧栏，填内容或让 AI 写，直接生成可编辑的 .pptx。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "icon": "./icon.png",
+  "files": [
+    "lib",
+    "web",
+    "skills",
+    "dev",
+    "cordis.patch.yml",
+    "docs",
+    "icon.png",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "ppt",
+    "pptx",
+    "sjtu",
+    "上海交通大学"
+  ],
+  "author": "lyrinlee",
+  "license": "MIT",
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.2 <0.3.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": []
+    }
+  }
+}

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN" data-scheme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>交大演示 · SJTU Deck Studio</title>
+    <link rel="stylesheet" href="/sjtu-ppt/style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="交大演示">
+          <span class="seal">交</span>
+          <span class="brand-text"><strong>交大演示</strong><small>SJTU DECK STUDIO</small></span>
+        </a>
+        <div class="top-actions">
+          <button class="runtime" id="runtime" type="button" title="检查生成环境">
+            <span class="dot"></span><span id="runtimeText">检查环境…</span>
+          </button>
+          <button class="btn ghost sm" id="importBtn" type="button">导入 JSON</button>
+          <button class="btn primary sm" id="aiTop" type="button">让 AI 写</button>
+        </div>
+      </header>
+
+      <main id="top">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="tick"></span>8 TEMPLATES · 5 LAYOUTS · PPTX</p>
+            <h1>把大纲，排成一份<br /><em>交大模板</em>的 PPT。</h1>
+            <p class="lede">
+              八套上海交大模板，封面、目录、内页、过渡、封底都在。填好内容直接下载可编辑的
+              <code>.pptx</code>；也可以把大纲交给 AI，在对话里写完再回来。
+            </p>
+            <div class="hero-actions">
+              <a class="btn primary lg" href="#compose">开始排版</a>
+              <button class="btn quiet lg" id="aiHero" type="button">让 AI 从大纲写 <span class="arrow">↗</span></button>
+            </div>
+            <div class="hero-note">
+              <span id="heroTemplateName">basic · 蓝灰</span><i></i><span id="heroPages">6 页</span><i></i><span>可直接编辑</span>
+            </div>
+          </div>
+          <div class="hero-preview">
+            <div class="hero-frame" id="heroCover" aria-label="当前模板的封面预览"></div>
+            <div class="hero-caption"><span>COVER PREVIEW</span><span id="heroVersion">v0.1.0</span></div>
+          </div>
+        </section>
+
+        <section class="block" id="templates">
+          <div class="block-head">
+            <div>
+              <p class="kicker">01 / TEMPLATE</p>
+              <h2>选一套模板</h2>
+            </div>
+            <p class="block-note">配色、字体、页码都继承模板母版；生成后可以在 PowerPoint 里继续改。</p>
+          </div>
+          <div class="template-grid" id="templateGrid"></div>
+        </section>
+
+        <section class="block" id="compose">
+          <div class="block-head">
+            <div>
+              <p class="kicker">02 / CONTENT</p>
+              <h2>填内容</h2>
+            </div>
+            <p class="block-note">封面自动生成；下面是正文页。留空的页面不会出现在 PPT 里。</p>
+          </div>
+
+          <div class="compose">
+            <aside class="compose-aside">
+              <div class="card cover-form">
+                <div class="card-head">
+                  <span>封面</span>
+                  <div class="mini-actions">
+                    <button class="text-btn" id="sampleBtn" type="button">示例</button>
+                    <button class="text-btn" id="clearBtn" type="button">清空</button>
+                  </div>
+                </div>
+                <label class="field">
+                  <span>主标题</span>
+                  <input id="fTitle" type="text" maxlength="120" placeholder="例如：饮水思源 · 年度工作汇报" />
+                </label>
+                <label class="field">
+                  <span>副标题</span>
+                  <input id="fSubtitle" type="text" maxlength="120" placeholder="可选，一句话说明" />
+                </label>
+                <div class="field-row">
+                  <label class="field">
+                    <span>汇报人</span>
+                    <input id="fAuthor" type="text" maxlength="60" placeholder="姓名 / 单位" />
+                  </label>
+                  <label class="field">
+                    <span>日期</span>
+                    <input id="fDate" type="text" maxlength="40" placeholder="2026年11月" />
+                  </label>
+                </div>
+                <label class="switch">
+                  <input id="fPageNumbers" type="checkbox" checked />
+                  <span class="switch-track"></span>
+                  <span>内页显示页码</span>
+                </label>
+                <div class="tpl-facts" id="tplFacts"></div>
+              </div>
+              <div class="tip-card">
+                <p class="tip-title">交大模板的小规矩</p>
+                <p>一页一个观点，要点别超过 5 条。封面只放标题、副标题、汇报人和日期。</p>
+              </div>
+            </aside>
+
+            <div class="compose-main">
+              <div class="slide-toolbar">
+                <span id="slideCount">0 个正文页</span>
+                <div class="add-actions">
+                  <button type="button" data-add="toc">＋ 目录</button>
+                  <button type="button" data-add="content">＋ 内页</button>
+                  <button type="button" data-add="section">＋ 过渡</button>
+                  <button type="button" data-add="end">＋ 封底</button>
+                </div>
+              </div>
+              <div class="slide-list" id="slideList"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="build">
+          <div class="build-inner">
+            <div class="build-copy">
+              <span class="build-kicker">READY TO BUILD</span>
+              <strong id="genTitle">你的演示</strong>
+              <span id="genMeta">—</span>
+            </div>
+            <div class="build-actions">
+              <button class="btn ghost" id="exportBtn" type="button">导出 JSON</button>
+              <button class="btn accent lg" id="generateBtn" type="button">
+                <span class="spinner" id="genSpinner" hidden></span>
+                <span id="genLabel">生成 PPTX</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="block recent-block" id="recentSection" hidden>
+          <div class="block-head">
+            <div>
+              <p class="kicker">03 / RECENT</p>
+              <h2>最近生成</h2>
+            </div>
+            <p class="block-note">文件在 <code>~/.dsh/sjtu-ppt/out</code>，也可以直接在 Finder 里打开。</p>
+          </div>
+          <div class="recent-list" id="recentList"></div>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <span>交大演示 · 为 DSH 做的 SJTU 模板工作台</span>
+        <span>模板作者：李一 / 徐臻 / 迮佳 / 沈小丹 / 国际处</span>
+      </footer>
+    </div>
+
+    <div class="modal" id="aiModal" hidden>
+      <div class="modal-backdrop" data-close="ai"></div>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+        <button class="modal-x" data-close="ai" aria-label="关闭">×</button>
+        <p class="kicker">AI DRAFT</p>
+        <h3 id="aiTitle">让 AI 从大纲开始</h3>
+        <p class="modal-lede">
+          会打开一个新对话，并把要求填进输入框，不会自动发送。AI 会用随附的 sjtu-ppt 技能和
+          <strong id="aiTemplateName">basic · 蓝灰</strong> 模板。
+        </p>
+        <label class="field">
+          <span>主题 / 听众 / 想讲什么</span>
+          <textarea id="aiBrief" rows="5" maxlength="2000" placeholder="例如：给学院做 15 分钟的年度科研汇报，重点是三个项目进展和明年的申报计划。"></textarea>
+        </label>
+        <div class="modal-actions">
+          <button class="btn ghost" data-close="ai" type="button">取消</button>
+          <button class="btn primary" id="aiStartBtn" type="button">打开新对话</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="resultModal" hidden>
+      <div class="modal-backdrop" data-close="result"></div>
+      <div class="modal-panel result-panel" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+        <button class="modal-x" data-close="result" aria-label="关闭">×</button>
+        <div class="result-badge">✓</div>
+        <h3 id="resultTitle">做好了</h3>
+        <p class="modal-lede" id="resultMeta">—</p>
+        <div class="result-cover" id="resultCover"></div>
+        <div class="result-actions">
+          <a class="btn primary lg" id="resultDownload" href="#" download>下载 .pptx</a>
+          <button class="btn ghost" id="resultReveal" type="button">在 Finder 中显示</button>
+        </div>
+        <p class="result-warn" id="resultWarn" hidden></p>
+      </div>
+    </div>
+
+    <div class="toast-stack" id="toasts" aria-live="polite"></div>
+    <input type="file" id="fileInput" accept=".json,application/json" hidden />
+    <script src="/sjtu-ppt/app.js" defer></script>
+  </body>
+</html>
