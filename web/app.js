@@ -174,7 +174,7 @@ function buildMock(t, opts = {}) {
 function renderHero() {
   const t = currentTemplate()
   if (!t) return
-  els.heroTemplateName.textContent = `${t.name} · ${t.label}`
+  els.heroTemplateName.textContent = `${t.label} ${t.name}`
   const pages = visibleSlides().length + (state.title.trim() ? 1 : 0)
   els.heroPages.textContent = `${pages} 页`
 }
@@ -290,7 +290,7 @@ function setTemplate(id) {
   renderFacts()
   renderHero()
   updateSummary()
-  if (!$('#aiModal').hidden) $('#aiTemplateName').textContent = `${currentTemplate().label} · ${currentTemplate().name}`
+  if (!$('#aiModal').hidden) $('#aiTemplateName').textContent = `${currentTemplate().label} ${currentTemplate().name}`
   debounceSave()
 }
 
@@ -491,7 +491,6 @@ function toContent() {
 
 function captureDraft() {
   return {
-    tId: state.tId,
     title: state.title,
     subtitle: state.subtitle,
     author: state.author,
@@ -535,7 +534,11 @@ function restoreDraft() {
   try {
     const raw = localStorage.getItem(STORE_KEY)
     if (!raw) return false
-    applyDraft(JSON.parse(raw))
+    const data = JSON.parse(raw)
+    // 模板选择不跨刷新记忆：每次打开都回到 basic（交大红）。
+    delete data.tId
+    delete data.template
+    applyDraft(data)
     return true
   } catch {
     return false
@@ -727,7 +730,7 @@ function aiPrompt() {
 
 function openAi() {
   const t = currentTemplate()
-  if (t) els.aiTemplateName.textContent = `${t.label} · ${t.name}`
+  if (t) els.aiTemplateName.textContent = `${t.label} ${t.name}`
   openModal('ai')
   setTimeout(() => els.aiBrief.focus(), 80)
 }
