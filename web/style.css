@@ -1,3 +1,21 @@
+/* HarmonyOS Sans SC：原样使用用户提供的 TTF，不做子集化或格式转换。
+   版权归 Huawei Device Co., Ltd.，许可证见 web/assets/fonts/LICENSE.txt。 */
+@font-face {
+  font-family: "HarmonyOS Sans SC";
+  src: url("/sjtu-ppt/assets/fonts/HarmonyOS_Sans_SC_Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "HarmonyOS Sans SC";
+  src: url("/sjtu-ppt/assets/fonts/HarmonyOS_Sans_SC_Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 交大演示 · 侧栏页面
    编辑台的语气：米白纸、交大红、宋体标题；夜晚自动切到墨色。 */
 
@@ -16,8 +34,9 @@
   --build-bg: #1b1a18;
   --build-ink: #f7f3ea;
   --blue: #0051eb;
-  --display: "Songti SC", "Noto Serif SC", "STSong", "SimSun", serif;
-  --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Segoe UI", sans-serif;
+  --display: "HarmonyOS Sans SC", "Noto Sans SC", "PingFang SC", "Segoe UI", sans-serif;
+  --sans: "HarmonyOS Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Segoe UI", sans-serif;
+  --serif: "Songti SC", "Noto Serif SC", "STSong", "SimSun", serif;
   --mono: "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
   --shadow-s: 0 1px 2px rgba(30, 20, 12, 0.04), 0 10px 30px -18px rgba(30, 20, 12, 0.22);
   --shadow-l: 0 2px 4px rgba(30, 20, 12, 0.04), 0 40px 80px -40px rgba(30, 20, 12, 0.4);
@@ -133,7 +152,7 @@ code {
   border-radius: 9px;
   background: var(--red);
   color: #fff8f3;
-  font-family: var(--display);
+  font-family: var(--serif);
   font-size: 21px;
   font-weight: 700;
   line-height: 1;
@@ -315,7 +334,7 @@ code {
   right: -1.5%;
   top: -44px;
   z-index: 0;
-  font-family: var(--display);
+  font-family: var(--serif);
   font-size: clamp(220px, 30vw, 430px);
   font-weight: 700;
   line-height: 0.78;

@@ -9,6 +9,7 @@
 - 生成后可直接下载、在 Finder 中定位；「最近生成」保留历史
 - 注册 `sjtu-ppt` 技能和 `sjtu_ppt_generate` 工具，对话里也能生成并交付
 - 使用 DSH 桌面版自带的 Python（含 python-pptx），不额外装依赖
+- 界面字体使用 HarmonyOS Sans SC（Regular / Bold）
 - 已在 DSH 0.2.1-rc.5 + python-pptx 1.0.2 下验证：真实侧栏入口、生成、下载、AI 草稿桥接都通过
 
 ![交大演示侧栏工作台](docs/panel.png)
@@ -184,6 +185,10 @@ lib/client.js     浏览器半边：侧栏入口 + iframe + 主题同步
 web/              工作台页面
 skills/sjtu-ppt/  上游技能的 vendored 快照
 ```
+
+## 字体
+
+界面使用 HarmonyOS Sans SC 的 Regular / Bold 两档，版权归 Huawei Device Co., Ltd.，按 HarmonyOS Sans Fonts License Agreement 随插件以未修改的 TTF 分发；许可证见 `web/assets/fonts/LICENSE.txt`。做字体子集化、改字形或单独再分发字体文件都不在本插件的许可范围内。
 
 ## 上游与改动
 
