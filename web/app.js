@@ -17,6 +17,7 @@ const state = {
   pageNumbers: true,
   slides: [],
   recent: [],
+  materials: [],
   health: null,
 }
 
@@ -612,6 +613,176 @@ async function loadRecent() {
   }
 }
 
+/* ── 材料台 ───────────────────────────────────────────── */
+
+const MATERIAL_MAX = 25 * 1024 * 1024
+const MATERIAL_EXT = new Set([
+  'doc', 'docx', 'rtf', 'pdf', 'md', 'markdown', 'txt', 'csv', 'json', 'html', 'htm',
+  'ppt', 'pptx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'webp', 'gif',
+])
+
+function materialExt(name) {
+  const i = String(name || '').lastIndexOf('.')
+  return i > 0 ? name.slice(i + 1).toLowerCase() : ''
+}
+
+function extLabel(ext) {
+  return ext === 'jpeg' ? 'JPG' : String(ext || '?').toUpperCase()
+}
+
+async function loadMaterials() {
+  try {
+    const response = await fetch('/sjtu-ppt/api/materials')
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const data = await response.json()
+    state.materials = Array.isArray(data.materials) ? data.materials : []
+  } catch {
+    state.materials = []
+  }
+  renderMaterials()
+}
+
+function renderMaterials() {
+  const mats = state.materials
+  const list = els.materialList
+  clear(list)
+  els.materialEmpty.hidden = mats.length > 0
+  els.materialFoot.hidden = mats.length === 0
+  els.materialCount.textContent = `${mats.length} 份`
+  if (!mats.length) {
+    els.materialSummary.textContent = ''
+    return
+  }
+
+  for (const m of mats) {
+    const row = el('article', { className: 'material', dataset: { id: m.id } })
+    if (m.error) row.title = m.error
+    const mark = m.kind === 'image'
+      ? el('span', { className: 'material-thumb', style: `background-image:url("${m.fileUrl}")` })
+      : el('span', { className: `material-ext ext-${m.ext}`, text: extLabel(m.ext) })
+
+    const metaBits = [fmtBytes(m.bytes)]
+    if (m.kind === 'image') metaBits.push('图片')
+    else if (m.chars) metaBits.push(`${m.chars.toLocaleString('zh-CN')} 字`)
+    else metaBits.push('未提取文字')
+    metaBits.push(extLabel(m.ext))
+
+    const body = el('div', { className: 'material-body' })
+    body.append(
+      el('strong', { className: 'material-name', text: m.name, title: m.name }),
+      el('span', { className: 'material-meta', text: metaBits.join(' · ') }),
+    )
+    if (m.excerpt) {
+      body.append(el('p', { className: 'material-excerpt', text: m.excerpt.replace(/\s+/g, ' ').slice(0, 130) }))
+    }
+
+    const actions = el('div', { className: 'material-actions' })
+    if (m.chars) actions.append(el('button', { className: 'text-btn', type: 'button', dataset: { view: m.id }, text: '看全文' }))
+    if (m.kind === 'image') actions.append(el('a', { className: 'text-btn', href: m.fileUrl, target: '_blank', rel: 'noopener', text: '查看' }))
+    actions.append(el('button', { className: 'material-remove', type: 'button', dataset: { remove: m.id }, 'aria-label': `移除 ${m.name}`, text: '×' }))
+
+    row.append(mark, body, actions)
+    list.append(row)
+  }
+
+  const bytes = mats.reduce((sum, m) => sum + (m.bytes || 0), 0)
+  const chars = mats.reduce((sum, m) => sum + (m.chars || 0), 0)
+  const images = mats.filter((m) => m.kind === 'image').length
+  const bits = [`${mats.length} 份材料`, fmtBytes(bytes)]
+  if (chars) bits.push(`${chars.toLocaleString('zh-CN')} 字`)
+  if (images) bits.push(`${images} 张图片`)
+  els.materialSummary.textContent = bits.join(' · ')
+}
+
+function setDropBusy(text) {
+  els.dropZone.classList.toggle('busy', Boolean(text))
+  els.dropZone.setAttribute('aria-busy', text ? 'true' : 'false')
+  els.dropStatus.hidden = !text
+  els.dropStatus.textContent = text || ''
+}
+
+async function uploadMaterials(files) {
+  const list = [...(files || [])]
+  if (!list.length) return
+  let added = 0
+  for (const file of list) {
+    const ext = materialExt(file.name)
+    if (!MATERIAL_EXT.has(ext)) {
+      toast(`${file.name}：不支持 .${ext || '?'} 格式`, 'error')
+      continue
+    }
+    if (file.size > MATERIAL_MAX) {
+      toast(`${file.name} 超过 25 MB`, 'error')
+      continue
+    }
+    setDropBusy(`正在读取 ${file.name}…`)
+    try {
+      const response = await fetch(`/sjtu-ppt/api/materials?name=${encodeURIComponent(file.name)}`, {
+        method: 'POST',
+        headers: { 'content-type': file.type || 'application/octet-stream' },
+        body: file,
+      })
+      let data = null
+      try {
+        data = await response.json()
+      } catch {
+        throw new Error(`HTTP ${response.status}`)
+      }
+      if (!response.ok || !data.ok) throw new Error(data.error || `HTTP ${response.status}`)
+      state.materials.unshift(data.material)
+      renderMaterials()
+      added += 1
+      if (data.material.error && data.material.kind !== 'image') {
+        toast(`${file.name} 已上传，但没提取到文字：${data.material.error}`, 'warn')
+      }
+    } catch (error) {
+      toast(`上传 ${file.name} 失败：${error.message}`, 'error')
+    }
+  }
+  setDropBusy(null)
+  if (added) toast(`已加入 ${added} 份材料。`, 'ok')
+}
+
+async function removeMaterial(id) {
+  const material = state.materials.find((m) => m.id === id)
+  if (!material) return
+  try {
+    const response = await fetch(`/sjtu-ppt/api/materials/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error || `HTTP ${response.status}`)
+    }
+    state.materials = state.materials.filter((m) => m.id !== id)
+    renderMaterials()
+    toast(`已移除「${material.name}」。`, 'ok')
+  } catch (error) {
+    toast(`移除失败：${error.message}`, 'error')
+  }
+}
+
+async function openMaterialText(id) {
+  const material = state.materials.find((m) => m.id === id)
+  if (!material) return
+  els.textTitle.textContent = material.name
+  els.textMeta.textContent = [
+    fmtBytes(material.bytes),
+    material.chars ? `${material.chars.toLocaleString('zh-CN')} 字` : '未提取文字',
+    fmtDate(material.createdAt),
+  ].filter(Boolean).join(' · ')
+  els.materialText.textContent = '读取中…'
+  els.copyMaterial.dataset.text = ''
+  openModal('text')
+  try {
+    const response = await fetch(material.textUrl)
+    const data = await response.json()
+    if (!response.ok || !data.ok) throw new Error(data.error || `HTTP ${response.status}`)
+    els.materialText.textContent = data.text || (material.error ? `没有提取到文字：${material.error}` : '这份材料没有可显示的文字。')
+    els.copyMaterial.dataset.text = data.text || ''
+  } catch (error) {
+    els.materialText.textContent = `读取失败：${error.message}`
+  }
+}
+
 /* ── 生成 ─────────────────────────────────────────────── */
 
 function setBusy(busy) {
@@ -718,19 +889,51 @@ async function importJson(file) {
 function aiPrompt() {
   const t = currentTemplate()
   const brief = els.aiBrief.value.trim()
-  return [
+  const textMats = state.materials.filter((m) => m.chars > 0)
+  const imageMats = state.materials.filter((m) => m.kind === 'image')
+  const lines = [
     '用 sjtu-ppt skill 帮我做一份交大风格的 PPT。',
     '',
     `模板：${t.label}（${t.name}，${t.file}）`,
     brief ? `主题与要求：\n${brief}` : '主题我还没想好。先问我三个问题：讲给谁听、想讲什么、大概多少页。',
+  ]
+
+  if (textMats.length) {
+    lines.push('', '我上传了这些材料，请优先依据材料内容写，不要编造材料里没有的数据：')
+    let budget = 6000
+    for (const material of textMats.slice(0, 8)) {
+      if (budget <= 0) break
+      const excerpt = material.excerpt.slice(0, Math.min(1600, budget))
+      budget -= excerpt.length
+      lines.push(`【${material.name}】`, excerpt)
+    }
+    lines.push('', '材料全文在本地，需要细节时可以直接读：')
+    for (const material of textMats) lines.push(`- ${material.name}：${material.textPath}`)
+  }
+
+  if (imageMats.length) {
+    lines.push('', '图片素材（可用于封面 / 过渡页）：')
+    for (const material of imageMats) lines.push(`- ${material.name}：${material.filePath}`)
+  }
+
+  lines.push(
     '',
     '请先给我 6–8 页的提纲；如果信息已经够，也可以直接生成。生成时用 sjtu_ppt_generate 工具，把 .pptx 放到当前工作区，并把路径告诉我。',
-  ].join('\n')
+  )
+  return lines.join('\n')
 }
 
-function openAi() {
+function openAi(prefill = '') {
   const t = currentTemplate()
   if (t) els.aiTemplateName.textContent = `${t.label} ${t.name}`
+  if (typeof prefill === 'string' && prefill && !els.aiBrief.value.trim()) els.aiBrief.value = prefill
+  const mats = state.materials
+  const chars = mats.filter((m) => m.chars > 0).reduce((sum, m) => sum + m.chars, 0)
+  els.aiMaterialNote.hidden = mats.length === 0
+  if (mats.length) {
+    const names = mats.slice(0, 3).map((m) => m.name).join('、')
+    els.aiMaterialNote.textContent = `会带上 ${mats.length} 份材料${chars ? `（约 ${Math.min(chars, 6000).toLocaleString('zh-CN')} 字摘录）` : ''}：${names}${mats.length > 3 ? ' 等' : ''}`
+  }
   openModal('ai')
   setTimeout(() => els.aiBrief.focus(), 80)
 }
@@ -846,6 +1049,19 @@ async function boot() {
   els.genLabel = $('#genLabel')
   els.recentSection = $('#recentSection')
   els.recentList = $('#recentList')
+  els.dropZone = $('#dropZone')
+  els.materialInput = $('#materialInput')
+  els.materialList = $('#materialList')
+  els.materialEmpty = $('#materialEmpty')
+  els.materialFoot = $('#materialFoot')
+  els.materialCount = $('#materialCount')
+  els.materialSummary = $('#materialSummary')
+  els.dropStatus = $('#dropStatus')
+  els.aiMaterialNote = $('#aiMaterialNote')
+  els.textTitle = $('#textTitle')
+  els.textMeta = $('#textMeta')
+  els.materialText = $('#materialText')
+  els.copyMaterial = $('#copyMaterial')
   els.resultTitle = $('#resultTitle')
   els.resultMeta = $('#resultMeta')
   els.resultDownload = $('#resultDownload')
@@ -882,6 +1098,7 @@ async function boot() {
 
   checkHealth()
   loadRecent()
+  loadMaterials()
 }
 
 function bind() {
@@ -928,8 +1145,63 @@ function bind() {
     if (close) closeModal(close.dataset.close)
   })
 
-  for (const button of ['#aiTop', '#aiHero']) $(button).addEventListener('click', openAi)
+  for (const button of ['#aiTop', '#aiHero']) $(button).addEventListener('click', () => openAi())
+  $('#aiMaterials').addEventListener('click', () =>
+    openAi('请根据我上传的材料，整理一份 8–10 页的汇报：先给我提纲；如果信息足够，直接生成。'),
+  )
   $('#aiStartBtn').addEventListener('click', startAi)
+
+  els.dropZone.addEventListener('click', () => {
+    if (!els.dropZone.classList.contains('busy')) els.materialInput.click()
+  })
+  els.dropZone.addEventListener('keydown', (event) => {
+    if ((event.key === 'Enter' || event.key === ' ') && !els.dropZone.classList.contains('busy')) {
+      event.preventDefault()
+      els.materialInput.click()
+    }
+  })
+  for (const type of ['dragenter', 'dragover']) {
+    els.dropZone.addEventListener(type, (event) => {
+      event.preventDefault()
+      if (!els.dropZone.classList.contains('busy')) els.dropZone.classList.add('dragging')
+    })
+  }
+  els.dropZone.addEventListener('dragleave', (event) => {
+    if (!els.dropZone.contains(event.relatedTarget)) els.dropZone.classList.remove('dragging')
+  })
+  els.dropZone.addEventListener('drop', (event) => {
+    event.preventDefault()
+    els.dropZone.classList.remove('dragging')
+    if (!els.dropZone.classList.contains('busy')) uploadMaterials(event.dataTransfer && event.dataTransfer.files)
+  })
+  els.materialInput.addEventListener('change', () => {
+    uploadMaterials(els.materialInput.files)
+    els.materialInput.value = ''
+  })
+  const isTextField = (target) => target instanceof Element && Boolean(target.closest('input, textarea'))
+  addEventListener('dragover', (event) => {
+    if (!isTextField(event.target)) event.preventDefault()
+  })
+  addEventListener('drop', (event) => {
+    if (!isTextField(event.target)) event.preventDefault()
+  })
+
+  els.materialList.addEventListener('click', (event) => {
+    const view = event.target.closest('[data-view]')
+    if (view) return openMaterialText(view.dataset.view)
+    const remove = event.target.closest('[data-remove]')
+    if (remove) return removeMaterial(remove.dataset.remove)
+  })
+
+  els.copyMaterial.addEventListener('click', async () => {
+    const text = els.copyMaterial.dataset.text || els.materialText.textContent
+    try {
+      await navigator.clipboard.writeText(text)
+      toast('全文已复制。', 'ok')
+    } catch {
+      toast('复制失败，请手动选择文字。', 'error')
+    }
+  })
   $('#sampleBtn').addEventListener('click', loadSample)
   $('#clearBtn').addEventListener('click', clearAll)
   $('#generateBtn').addEventListener('click', generate)
@@ -958,7 +1230,7 @@ function bind() {
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
-      for (const name of ['ai', 'result']) closeModal(name)
+      for (const name of ['ai', 'result', 'text']) closeModal(name)
     }
   })
 

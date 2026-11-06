@@ -6,6 +6,7 @@
 - 8 套内置模板：basic / 130 / wine / crimson / origin / star / blue / global
 - 5 种版式：封面、目录、内页、过渡页、封底
 - 可视化编辑封面、目录、内页、过渡页、封底；横向海报条预览整份模板；草稿自动保存
+- 材料台：拖入 Word / PDF / Markdown / 表格 / 图片，自动提取文字；AI 写稿时带上材料摘录
 - 生成后可直接下载、在 Finder 中定位；「最近生成」保留历史
 - 注册 `sjtu-ppt` 技能和 `sjtu_ppt_generate` 工具，对话里也能生成并交付
 - 使用 DSH 桌面版自带的 Python（含 python-pptx），不额外装依赖
@@ -98,6 +99,18 @@ $DSH_HOME/sjtu-ppt/out/<id>/
 ```
 
 `output` 建议给当前工作区的绝对路径；不给就落在 `$DSH_HOME/sjtu-ppt/out/`。
+
+## 材料
+
+侧栏顶部的「01 / MATERIAL 放材料」是材料台：
+
+- 支持 Word（docx / doc / rtf）、PDF、Markdown / 文本 / CSV / JSON、PPT / PPTX、Excel / XLSX、图片（png / jpg / webp / gif），单个 ≤ 25 MB。
+- 拖进去或点击选择；文字自动提取，列表里能看到字数，点「看全文」检查提取结果。
+- 文件只留在本机：`~/.dsh/sjtu-ppt/materials/<id>/`（原文件 + `text.txt` + `meta.json`），不会上传云端。
+- 点「让 AI 用这些材料写」，会把最多 6000 字摘录和全文路径放进新对话的提示词；AI 需要细节时可以直接读 `text.txt`。
+- 图片不做 OCR，作为素材路径交给 AI；`origin` 模板支持封面 / 过渡页换图。旧版 `.ppt` / `.xls` 可以上传，但取字会提示另存为 `.pptx` / `.xlsx`。
+
+![材料台](docs/materials.png)
 
 ## 模板
 
