@@ -792,6 +792,11 @@ def generate_presentation(template_path, content_json, output_path):
         # branches below handle title filling to avoid duplicate writes).
         title_shape = find_shape_by_type_and_name(slide, ["TITLE"], ["标题", "title"])
 
+        # 页面素材：模板里有 PICTURE 占位就放进去；没有就跳过并给 warning。
+        s_image = slide_def.get("image", "")
+        if s_image:
+            fill_picture_placeholder(slide, s_image)
+
         # --- TOC layout (目录) ---
         if layout_kind(layout.name, "toc"):
             # TOC layouts: try placeholders first, then fallback to fixed positions
@@ -803,10 +808,6 @@ def generate_presentation(template_path, content_json, output_path):
         # --- Section / Transition layout (过渡页) ---
         if layout_kind(layout.name, "section"):
             fill_section_or_end(slide, title_shape, s_title, s_subtitle)
-            # Section image (for templates with picture placeholders like SJTU-origin)
-            section_image = slide_def.get("image", "")
-            if section_image:
-                fill_picture_placeholder(slide, section_image)
             continue
 
         # --- End / Closing layout (封底) ---
@@ -949,13 +950,17 @@ def main():
     with open(args.content, "r", encoding="utf-8") as f:
         raw_text = f.read()
 
-    normalized_text = normalize_json_text(raw_text)
-
+    # 先按原样解析：合法 JSON 里的中文引号、全角标点是正文，不能改。
+    # 只有原样解析失败时，才用全角→半角兜底（兼容手写 JSON）。
     try:
-        content_data = json.loads(normalized_text)
-    except json.JSONDecodeError as e:
-        print(json.dumps({"status": "error", "message": f"Invalid JSON: {e}"}, ensure_ascii=False))
-        sys.exit(1)
+        content_data = json.loads(raw_text)
+    except json.JSONDecodeError:
+        normalized_text = normalize_json_text(raw_text)
+        try:
+            content_data = json.loads(normalized_text)
+        except json.JSONDecodeError as e:
+            print(json.dumps({"status": "error", "message": f"Invalid JSON: {e}"}, ensure_ascii=False))
+            sys.exit(1)
 
     template_path = args.template
     if not template_path or not os.path.exists(template_path):

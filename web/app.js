@@ -2,7 +2,15 @@
    纯原生 JS：模板卡、封面实时预览、正文页编辑、生成与最近文件。 */
 
 const STORE_KEY = 'sjtu-ppt:draft:v1'
+const MODE_KEY = 'sjtu-ppt:mode:v1'
 const THUMB_BASE = '/sjtu-ppt/assets/thumbs/'
+const ASSET_EXT = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'mp4', 'mov', 'webm', 'm4v', 'mp3', 'wav', 'm4a', 'aac', 'ogg'])
+const ASSET_HINT = {
+  toc: '4:3 · 1200×900',
+  content: '4:3 · 1600×1200',
+  section: '16:9 · 1920×1080',
+  end: '16:9 · 1920×1080',
+}
 const $ = (sel, root = document) => root.querySelector(sel)
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)]
 
@@ -18,6 +26,9 @@ const state = {
   slides: [],
   recent: [],
   materials: [],
+  coverAssets: [],
+  mode: 'quick',
+  quickPages: 8,
   health: null,
 }
 
@@ -53,11 +64,16 @@ const SAMPLE = () => ({
   ],
 })
 
+const newSlideUid = () =>
+  globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function'
+    ? globalThis.crypto.randomUUID()
+    : `s-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
 const LAYOUT_DEFAULT = {
-  toc: () => ({ layout: 'toc', title: '目录', content: '' }),
-  content: () => ({ layout: 'content', title: '', content: '' }),
-  section: () => ({ layout: 'section', title: '', subtitle: '' }),
-  end: () => ({ layout: 'end', title: '谢谢', subtitle: 'Q&A' }),
+  toc: () => ({ uid: newSlideUid(), layout: 'toc', title: '目录', content: '', assets: [] }),
+  content: () => ({ uid: newSlideUid(), layout: 'content', title: '', content: '', assets: [] }),
+  section: () => ({ uid: newSlideUid(), layout: 'section', title: '', subtitle: '', assets: [] }),
+  end: () => ({ uid: newSlideUid(), layout: 'end', title: '谢谢', subtitle: 'Q&A', assets: [] }),
 }
 
 const currentTemplate = () => state.templates.find((t) => t.id === state.tId) || state.templates[0] || null
@@ -238,6 +254,7 @@ function renderTemplates() {
     els.grid.append(card)
   }
   if (els.grid) els.grid.scrollLeft = scroll
+  renderQuickTemplate()
   requestAnimationFrame(updateTemplateNav)
 }
 
@@ -290,6 +307,9 @@ function setTemplate(id) {
   syncTemplateActive()
   renderFacts()
   renderHero()
+  renderQuickTemplate()
+  renderCoverAssets()
+  if (state.mode === 'edit') renderSlides()
   updateSummary()
   if (!$('#aiModal').hidden) $('#aiTemplateName').textContent = `${currentTemplate().label} ${currentTemplate().name}`
   debounceSave()
@@ -299,6 +319,7 @@ function setTemplate(id) {
 
 function visibleSlides() {
   return state.slides.filter((s) => {
+    if ((s.assets || []).length) return true
     if (s.layout === 'section' || s.layout === 'end') return Boolean((s.title || '').trim() || (s.subtitle || '').trim())
     return Boolean((s.title || '').trim() || (s.content || '').trim())
   })
@@ -376,6 +397,20 @@ function renderSlides() {
     }
 
     card.append(el('p', { className: 'slide-hint', text: layoutInfo(slide.layout).hint }))
+
+    const assets = slideAssets(slide)
+    const assetBlock = el('div', { className: 'asset-block slide-assets', dataset: { assetIndex: index } })
+    assetBlock.append(
+      el(
+        'div',
+        { className: 'asset-head' },
+        el('span', { text: '页面素材' }),
+        el('span', { className: 'asset-hint', text: assetHintText(slide.layout) }),
+      ),
+      renderAssetList(assets, { index }),
+      el('button', { className: 'asset-add', type: 'button', dataset: { assetAdd: index }, text: '＋ 图片 / 视频 / 音频' }),
+    )
+    card.append(assetBlock)
     els.slideList.append(card)
   })
 
@@ -478,16 +513,46 @@ function toContent() {
     if ((slide.subtitle || '').trim()) out.subtitle = slide.subtitle.trim()
     const content = parseBullets(slide.content)
     if (content.length) out.content = content
+    const image = slideAssets(slide).find((asset) => asset.kind === 'image' && asset.filePath)
+    if (image) out.image = image.filePath
     slides.push(out)
   }
+  const coverImage = state.coverAssets.find((asset) => asset.kind === 'image' && asset.filePath)
   return {
     title: state.title.trim(),
     subtitle: state.subtitle.trim(),
     date: state.date.trim(),
     author: state.author.trim(),
     page_numbers: state.pageNumbers,
+    ...(coverImage ? { cover_image: coverImage.filePath } : {}),
     slides,
   }
+}
+
+function cleanAssets(value) {
+  if (!Array.isArray(value)) return []
+  const out = []
+  for (const asset of value) {
+    if (!asset || typeof asset !== 'object') continue
+    if (typeof asset.id !== 'string' || !/^[a-z0-9-]+$/i.test(asset.id)) continue
+    if (!['image', 'video', 'audio'].includes(asset.kind)) continue
+    const width = Number(asset.width)
+    const height = Number(asset.height)
+    out.push({
+      id: asset.id,
+      name: typeof asset.name === 'string' ? asset.name : '素材',
+      ext: typeof asset.ext === 'string' ? asset.ext : '',
+      kind: asset.kind,
+      bytes: Number(asset.bytes) || 0,
+      mime: typeof asset.mime === 'string' ? asset.mime : '',
+      width: Number.isFinite(width) && width > 0 ? width : null,
+      height: Number.isFinite(height) && height > 0 ? height : null,
+      filePath: typeof asset.filePath === 'string' ? asset.filePath : '',
+      fileUrl: `/sjtu-ppt/api/materials/${asset.id}/file`,
+      createdAt: typeof asset.createdAt === 'string' ? asset.createdAt : '',
+    })
+  }
+  return out
 }
 
 function captureDraft() {
@@ -497,7 +562,15 @@ function captureDraft() {
     author: state.author,
     date: state.date,
     pageNumbers: state.pageNumbers,
-    slides: state.slides.map((s) => ({ layout: s.layout, title: s.title || '', subtitle: s.subtitle || '', content: s.content || '' })),
+    coverAssets: state.coverAssets,
+    slides: state.slides.map((s) => ({
+      uid: s.uid,
+      layout: s.layout,
+      title: s.title || '',
+      subtitle: s.subtitle || '',
+      content: s.content || '',
+      assets: s.assets || [],
+    })),
   }
 }
 
@@ -514,12 +587,15 @@ function applyDraft(data) {
   state.slides = slides.slice(0, 80).map((s) => {
     const layout = ['toc', 'content', 'section', 'end'].includes(s.layout) ? s.layout : 'content'
     return {
+      uid: typeof s.uid === 'string' && s.uid ? s.uid : newSlideUid(),
       layout,
       title: typeof s.title === 'string' ? s.title : '',
       subtitle: typeof s.subtitle === 'string' ? s.subtitle : '',
       content: typeof s.content === 'string' ? s.content : bulletsToText(s.content),
+      assets: cleanAssets(s.assets).slice(0, 8),
     }
   })
+  state.coverAssets = cleanAssets(data.coverAssets).slice(0, 4)
   syncFields()
 }
 
@@ -783,6 +859,246 @@ async function openMaterialText(id) {
   }
 }
 
+/* ── 模式 / 快速生成 ──────────────────────────────────── */
+
+let quickBusy = false
+let assetTarget = null
+
+function assetKind(ext) {
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext)) return 'image'
+  if (['mp4', 'mov', 'webm', 'm4v'].includes(ext)) return 'video'
+  return 'audio'
+}
+
+async function imageSize(file) {
+  try {
+    const bitmap = await createImageBitmap(file)
+    const size = { w: bitmap.width, h: bitmap.height }
+    bitmap.close()
+    return size
+  } catch {
+    return null
+  }
+}
+
+function slideAssets(slide) {
+  if (!Array.isArray(slide.assets)) slide.assets = []
+  return slide.assets
+}
+
+function assetMeta(asset) {
+  const bits = []
+  if (asset.kind === 'image' && asset.width && asset.height) bits.push(`${asset.width}×${asset.height}`)
+  bits.push(asset.kind === 'image' ? '图片' : asset.kind === 'video' ? '视频' : '音频')
+  bits.push(fmtBytes(asset.bytes))
+  return bits.join(' · ')
+}
+
+function renderAssetList(assets, { index = null, cover = false } = {}) {
+  const list = el('div', { className: 'asset-list' })
+  for (const asset of assets || []) {
+    const tile = el('div', { className: 'asset' })
+    const open = el('a', { className: 'asset-open', href: asset.fileUrl, target: '_blank', rel: 'noopener' })
+    const thumb = asset.kind === 'image'
+      ? el('span', { className: 'asset-thumb', style: `background-image:url("${asset.fileUrl}")` })
+      : el('span', { className: `asset-thumb ${asset.kind}` })
+    const info = el('span', { className: 'asset-info' })
+    info.append(el('strong', { text: asset.name, title: asset.name }), el('span', { text: assetMeta(asset) }))
+    open.append(thumb, info)
+    const remove = el('button', {
+      className: 'asset-remove',
+      type: 'button',
+      dataset: { assetRemove: asset.id },
+      'aria-label': `移除 ${asset.name}`,
+      text: '×',
+    })
+    if (index !== null) remove.dataset.assetIndex = String(index)
+    if (cover) remove.dataset.assetCover = '1'
+    tile.append(open, remove)
+    list.append(tile)
+  }
+  return list
+}
+
+function renderCoverAssets() {
+  if (!els.coverAssetList) return
+  if (els.coverAssetHint) els.coverAssetHint.textContent = coverAssetHintText()
+  clear(els.coverAssetList)
+  els.coverAssetList.append(renderAssetList(state.coverAssets, { cover: true }))
+}
+
+function openAssetPicker(target) {
+  assetTarget = target
+  if (!els.assetInput) return
+  els.assetInput.value = ''
+  els.assetInput.click()
+}
+
+async function uploadAssets(files, target) {
+  if (!target) return
+  const list = [...(files || [])]
+  let added = 0
+  for (const file of list) {
+    const ext = materialExt(file.name)
+    if (!ASSET_EXT.has(ext)) {
+      toast(`${file.name}：只支持图片 / 视频 / 音频`, 'error')
+      continue
+    }
+    if (file.size > MATERIAL_MAX) {
+      toast(`${file.name} 超过 25 MB`, 'error')
+      continue
+    }
+    const dims = assetKind(ext) === 'image' ? await imageSize(file) : null
+    const slideId = target.type === 'slide'
+      ? target.slide.uid || (target.slide.uid = newSlideUid())
+      : 'cover'
+    const query = new URLSearchParams({ name: file.name, scope: 'slide', slide: slideId })
+    if (dims) {
+      query.set('w', String(dims.w))
+      query.set('h', String(dims.h))
+    }
+    try {
+      const response = await fetch(`/sjtu-ppt/api/materials?${query}`, {
+        method: 'POST',
+        headers: { 'content-type': file.type || 'application/octet-stream' },
+        body: file,
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data.ok) throw new Error(data.error || `HTTP ${response.status}`)
+      if (target.type === 'slide') {
+        slideAssets(target.slide).push(data.material)
+        renderSlides()
+      } else {
+        state.coverAssets.push(data.material)
+        renderCoverAssets()
+      }
+      added += 1
+      debounceSave()
+    } catch (error) {
+      toast(`上传 ${file.name} 失败：${error.message}`, 'error')
+    }
+  }
+  if (added) toast(`已加入 ${added} 个页面素材。`, 'ok')
+}
+
+async function removeAsset(id, { index = null, cover = false } = {}) {
+  try {
+    const response = await fetch(`/sjtu-ppt/api/materials/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}))
+      throw new Error(data.error || `HTTP ${response.status}`)
+    }
+    if (cover) {
+      state.coverAssets = state.coverAssets.filter((asset) => asset.id !== id)
+      renderCoverAssets()
+    } else if (Number.isInteger(index) && state.slides[index]) {
+      state.slides[index].assets = slideAssets(state.slides[index]).filter((asset) => asset.id !== id)
+      renderSlides()
+    }
+    debounceSave()
+    toast('已移除素材。', 'ok')
+  } catch (error) {
+    toast(`移除失败：${error.message}`, 'error')
+  }
+}
+
+function renderQuickTemplate() {
+  const t = currentTemplate()
+  if (t && els.quickTemplateName) els.quickTemplateName.textContent = `${t.label} ${t.name}`
+}
+
+function assetHintText(layout) {
+  const size = ASSET_HINT[layout] || '16:9 · 1920×1080'
+  return state.tId === 'origin' && layout === 'section' ? `会放进模板图位 · ${size}` : `当前模板无图位 · ${size}`
+}
+
+function coverAssetHintText() {
+  return state.tId === 'origin' ? '会放进封面图位 · 16:9 · 1920×1080' : '当前模板封面无图位 · 16:9 · 1920×1080'
+}
+
+function setQuickPages(pages) {
+  const next = [6, 8, 10, 12].includes(Number(pages)) ? Number(pages) : 8
+  state.quickPages = next
+  for (const button of $$('#quickPages button')) {
+    const active = Number(button.dataset.pages) === next
+    button.classList.toggle('active', active)
+    button.setAttribute('aria-pressed', active ? 'true' : 'false')
+  }
+}
+
+function setMode(mode, { scroll = true } = {}) {
+  const next = mode === 'edit' ? 'edit' : 'quick'
+  state.mode = next
+  if (els.quickPanel) els.quickPanel.hidden = next !== 'quick'
+  if (els.editPanel) els.editPanel.hidden = next !== 'edit'
+  if (els.buildBar) els.buildBar.hidden = next !== 'edit'
+  for (const card of $$('.mode-card')) {
+    const active = card.dataset.mode === next
+    card.classList.toggle('active', active)
+    card.setAttribute('aria-selected', active ? 'true' : 'false')
+  }
+  try {
+    localStorage.setItem(MODE_KEY, next)
+  } catch {
+    /* 隐私模式里存不了就算了 */
+  }
+  if (scroll) {
+    const panel = next === 'quick' ? els.quickPanel : els.editPanel
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  if (next === 'edit') {
+    renderSlides()
+    updateSummary()
+  }
+}
+
+function setQuickBusy(busy, status = '') {
+  quickBusy = busy
+  if (els.quickGenerate) els.quickGenerate.disabled = busy
+  if (els.quickSpinner) els.quickSpinner.hidden = !busy
+  if (els.quickLabel) els.quickLabel.textContent = busy ? '正在生成…' : 'AI 分析并生成 PPTX'
+  if (els.quickStatus) {
+    els.quickStatus.hidden = !status
+    els.quickStatus.textContent = status
+  }
+}
+
+async function runQuick() {
+  if (quickBusy) return
+  const brief = els.quickBrief.value.trim()
+  const materials = state.materials
+  if (!materials.some((m) => m.chars > 0) && !brief) {
+    toast('先上传能读出文字的材料，或者写一句补充要求。', 'error')
+    els.dropZone.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    return
+  }
+  setQuickBusy(true, '正在读材料…')
+  const analysis = setTimeout(() => setQuickBusy(true, 'AI 正在分析材料…'), 1200)
+  const layout = setTimeout(() => setQuickBusy(true, '正在套模板排版…'), 15_000)
+  try {
+    const response = await fetch('/sjtu-ppt/api/quick-generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        template: state.tId,
+        brief,
+        materialIds: materials.map((m) => m.id),
+        pages: state.quickPages,
+      }),
+    })
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok || !data.ok) throw new Error(data.error || `生成失败（HTTP ${response.status}）`)
+    openResult(data.deck)
+    await loadRecent()
+  } catch (error) {
+    toast(String(error.message || error), 'error')
+  } finally {
+    clearTimeout(analysis)
+    clearTimeout(layout)
+    setQuickBusy(false)
+  }
+}
+
 /* ── 生成 ─────────────────────────────────────────────── */
 
 function setBusy(busy) {
@@ -823,12 +1139,14 @@ async function generate() {
 function openResult(deck) {
   lastDeck = deck
   const t = currentTemplate()
+  const preview = deck.preview || { subtitle: state.subtitle, author: state.author, date: state.date }
   els.resultTitle.textContent = deck.title || '做好了'
   els.resultMeta.textContent = `${deck.slides} 页 · ${deck.templateLabel} · ${fmtBytes(deck.bytes)} · ${deck.source === 'tool' ? 'AI 生成' : '网页生成'}`
   els.resultDownload.href = deck.url
   els.resultDownload.setAttribute('download', deck.file || 'deck.pptx')
+  if (els.resultEdit) els.resultEdit.hidden = !(deck.content && Array.isArray(deck.content.slides))
   clear(els.resultCover)
-  if (t) els.resultCover.append(buildMock(t, { title: deck.title, subtitle: state.subtitle, meta: [state.author, state.date].filter(Boolean).join(' · ') }))
+  if (t) els.resultCover.append(buildMock(t, { title: deck.title, subtitle: preview.subtitle, meta: [preview.author, preview.date].filter(Boolean).join(' · ') }))
   if (deck.warnings && deck.warnings.length) {
     els.resultWarn.hidden = false
     els.resultWarn.textContent = `生成时有 ${deck.warnings.length} 条 warning：\n${deck.warnings.join('\n')}`
@@ -837,6 +1155,28 @@ function openResult(deck) {
     els.resultWarn.textContent = ''
   }
   openModal('result')
+}
+
+function applyQuickContent(content) {
+  if (!content || !Array.isArray(content.slides)) return
+  state.title = typeof content.title === 'string' ? content.title : ''
+  state.subtitle = typeof content.subtitle === 'string' ? content.subtitle : ''
+  state.author = typeof content.author === 'string' ? content.author : ''
+  state.date = typeof content.date === 'string' ? content.date : ''
+  state.pageNumbers = content.page_numbers !== false
+  state.slides = content.slides.map((slide) => ({
+    uid: newSlideUid(),
+    layout: ['toc', 'content', 'section', 'end'].includes(slide.layout) ? slide.layout : 'content',
+    title: typeof slide.title === 'string' ? slide.title : '',
+    subtitle: typeof slide.subtitle === 'string' ? slide.subtitle : '',
+    content: bulletsToText(slide.content),
+    assets: [],
+  }))
+  state.coverAssets = []
+  syncFields()
+  renderSlides()
+  updateSummary()
+  saveDraft()
 }
 
 async function revealDeck(id) {
@@ -914,6 +1254,16 @@ function aiPrompt() {
   if (imageMats.length) {
     lines.push('', '图片素材（可用于封面 / 过渡页）：')
     for (const material of imageMats) lines.push(`- ${material.name}：${material.filePath}`)
+  }
+
+  const pageAssets = []
+  ;(state.coverAssets || []).forEach((asset) => pageAssets.push(`封面：${asset.name} — ${asset.filePath}`))
+  state.slides.forEach((slide, index) => {
+    for (const asset of slide.assets || []) pageAssets.push(`第 ${index + 1} 页（${layoutInfo(slide.layout).label}）：${asset.name} — ${asset.filePath}`)
+  })
+  if (pageAssets.length) {
+    lines.push('', '逐页素材（图片会尽量放进模板图位，音视频仅作参考）：')
+    lines.push(...pageAssets)
   }
 
   lines.push(
@@ -1062,11 +1412,27 @@ async function boot() {
   els.textMeta = $('#textMeta')
   els.materialText = $('#materialText')
   els.copyMaterial = $('#copyMaterial')
+  els.quickPanel = $('#quickPanel')
+  els.editPanel = $('#editPanel')
+  els.buildBar = $('#buildBar')
+  els.quickTemplateName = $('#quickTemplateName')
+  els.quickBrief = $('#quickBrief')
+  els.quickPages = $('#quickPages')
+  els.quickGenerate = $('#quickGenerate')
+  els.quickSpinner = $('#quickSpinner')
+  els.quickLabel = $('#quickLabel')
+  els.quickStatus = $('#quickStatus')
+  els.assetInput = $('#assetInput')
+  els.coverAssets = $('#coverAssets')
+  els.coverAssetList = $('#coverAssetList')
+  els.coverAssetAdd = $('#coverAssetAdd')
+  els.coverAssetHint = $('#coverAssetHint')
   els.resultTitle = $('#resultTitle')
   els.resultMeta = $('#resultMeta')
   els.resultDownload = $('#resultDownload')
   els.resultCover = $('#resultCover')
   els.resultWarn = $('#resultWarn')
+  els.resultEdit = $('#resultEdit')
   els.aiBrief = $('#aiBrief')
   els.aiTemplateName = $('#aiTemplateName')
   els.runtime = $('#runtime')
@@ -1095,6 +1461,15 @@ async function boot() {
   renderSlides()
   renderHero()
   updateSummary()
+  renderCoverAssets()
+  setQuickPages(state.quickPages)
+  let savedMode = null
+  try {
+    savedMode = localStorage.getItem(MODE_KEY)
+  } catch {
+    /* ignore */
+  }
+  setMode(savedMode === 'edit' ? 'edit' : 'quick', { scroll: false })
 
   checkHealth()
   loadRecent()
@@ -1146,9 +1521,14 @@ function bind() {
   })
 
   for (const button of ['#aiTop', '#aiHero']) $(button).addEventListener('click', () => openAi())
-  $('#aiMaterials').addEventListener('click', () =>
-    openAi('请根据我上传的材料，整理一份 8–10 页的汇报：先给我提纲；如果信息足够，直接生成。'),
-  )
+  for (const card of $$('.mode-card')) {
+    card.addEventListener('click', () => setMode(card.dataset.mode))
+  }
+  els.quickPages.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-pages]')
+    if (button) setQuickPages(button.dataset.pages)
+  })
+  els.quickGenerate.addEventListener('click', runQuick)
   $('#aiStartBtn').addEventListener('click', startAi)
 
   els.dropZone.addEventListener('click', () => {
@@ -1193,6 +1573,63 @@ function bind() {
     if (remove) return removeMaterial(remove.dataset.remove)
   })
 
+  els.coverAssetAdd.addEventListener('click', () => openAssetPicker({ type: 'cover' }))
+  els.assetInput.addEventListener('change', () => {
+    const target = assetTarget
+    assetTarget = null
+    uploadAssets(els.assetInput.files, target)
+    els.assetInput.value = ''
+  })
+
+  els.slideList.addEventListener('click', (event) => {
+    const add = event.target.closest('[data-asset-add]')
+    if (add) {
+      const slide = state.slides[Number(add.dataset.assetAdd)]
+      if (slide) openAssetPicker({ type: 'slide', slide })
+      return
+    }
+    const remove = event.target.closest('[data-asset-remove]')
+    if (remove) {
+      removeAsset(remove.dataset.assetRemove, {
+        index: remove.dataset.assetIndex === undefined ? null : Number(remove.dataset.assetIndex),
+        cover: remove.dataset.assetCover === '1',
+      })
+    }
+  })
+  els.coverAssetList.addEventListener('click', (event) => {
+    const remove = event.target.closest('[data-asset-remove]')
+    if (remove) removeAsset(remove.dataset.assetRemove, { cover: true })
+  })
+
+  const bindAssetDrop = (container, resolve) => {
+    if (!container) return
+    const blockAt = (target) => target.closest('.slide-assets, .cover-assets')
+    container.addEventListener('dragover', (event) => {
+      const block = blockAt(event.target)
+      if (!block) return
+      event.preventDefault()
+      block.classList.add('dragging')
+    })
+    container.addEventListener('dragleave', (event) => {
+      const block = blockAt(event.target)
+      if (block && !block.contains(event.relatedTarget)) block.classList.remove('dragging')
+    })
+    container.addEventListener('drop', (event) => {
+      const block = blockAt(event.target)
+      if (!block) return
+      event.preventDefault()
+      event.stopPropagation()
+      block.classList.remove('dragging')
+      const target = resolve(block)
+      if (target) uploadAssets(event.dataTransfer && event.dataTransfer.files, target)
+    })
+  }
+  bindAssetDrop(els.slideList, (block) => {
+    const slide = state.slides[Number(block.dataset.assetIndex)]
+    return slide ? { type: 'slide', slide } : null
+  })
+  bindAssetDrop(els.coverAssets, () => ({ type: 'cover' }))
+
   els.copyMaterial.addEventListener('click', async () => {
     const text = els.copyMaterial.dataset.text || els.materialText.textContent
     try {
@@ -1221,6 +1658,14 @@ function bind() {
 
   $('#resultReveal').addEventListener('click', () => {
     if (lastDeck) revealDeck(lastDeck.id)
+  })
+
+  els.resultEdit.addEventListener('click', () => {
+    if (!lastDeck || !lastDeck.content) return
+    applyQuickContent(lastDeck.content)
+    closeModal('result')
+    setMode('edit')
+    toast('已带入逐页精修；图片以生成的 PPT 为准。', 'ok')
   })
 
   els.runtime.addEventListener('click', () => {
