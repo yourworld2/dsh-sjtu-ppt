@@ -1314,13 +1314,29 @@ function clearAll() {
 /* ── 更新检查 ─────────────────────────────────────────── */
 
 function applyUpdateState(data) {
-  if (!data || !data.ok || !els.updateBtn) return
+  if (!els.updateBtn) return
+  if (!data || !data.ok) {
+    if (els.updateMeta) {
+      els.updateMeta.textContent = data && data.current
+        ? `当前 v${data.current} · 版本检查失败`
+        : '版本检查失败'
+    }
+    return
+  }
   const has = data.updateAvailable === true
+  const current = data.current || '—'
+  const latest = data.latest || '—'
   els.updateBtn.classList.toggle('has-update', has)
   if (els.updateDot) els.updateDot.hidden = !has
+  if (els.updateMeta) {
+    els.updateMeta.textContent = has
+      ? `当前 v${current} · 需更新 v${latest}`
+      : `当前 v${current} · 最新 v${latest}`
+    els.updateMeta.classList.toggle('has-update', has)
+  }
   const label = has
-    ? `发现新版本 ${data.latest}（当前 ${data.current}），点击让 AI 更新`
-    : `当前已是最新版本 ${data.current}`
+    ? `发现新版本 ${latest}（当前 ${current}），点击让 AI 更新`
+    : `当前已是最新版本 ${current}`
   els.updateBtn.title = label
   els.updateBtn.setAttribute('aria-label', `更新插件：${label}`)
 }
@@ -1331,7 +1347,7 @@ async function checkUpdateAvailability(force = false) {
     if (!response.ok) return
     applyUpdateState(await response.json())
   } catch {
-    /* 网络不通时静默，按钮仍可点 */
+    if (els.updateMeta) els.updateMeta.textContent = '版本检查失败'
   }
 }
 
@@ -1361,6 +1377,7 @@ async function boot() {
   els.grid = $('#templateGrid')
   els.updateBtn = $('#updateBtn')
   els.updateDot = $('#updateDot')
+  els.updateMeta = $('#updateMeta')
   els.tplPreview = $('#tplPreview')
   els.tplPreviewImg = $('#tplPreviewImg')
   els.tplPreviewCaption = $('#tplPreviewCaption')

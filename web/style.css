@@ -181,8 +181,25 @@ code {
 
 .top-actions {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.update-meta {
+  max-width: 260px;
+  overflow: hidden;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--ink-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.update-meta.has-update {
+  color: var(--red);
 }
 
 .runtime {

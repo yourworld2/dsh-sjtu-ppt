@@ -68,7 +68,7 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 
 插件首页右上角有「更新」按钮：
 
-- 打开页面时会读取 GitHub `main` 分支的 `package.json` 版本；比当前安装新时，按钮出现红点，悬停显示「发现新版本 vX（当前 vY）」。
+- 打开页面时会读取 GitHub `main` 分支的 `package.json` 版本；按钮下面固定显示「当前 vX · 最新 vY」，比当前安装新时变成「当前 vX · 需更新 vY」，按钮同时出现红点。
 - 点击会打开一个新对话，输入框预填下面这句，不会自动发送：
 
   ```
