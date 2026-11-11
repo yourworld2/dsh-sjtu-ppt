@@ -308,6 +308,7 @@ function setTemplate(id) {
   renderFacts()
   renderHero()
   renderQuickTemplate()
+  renderEditNote()
   renderCoverAssets()
   if (state.mode === 'edit') renderSlides()
   updateSummary()
@@ -1002,6 +1003,14 @@ async function removeAsset(id, { index = null, cover = false } = {}) {
   }
 }
 
+function renderEditNote() {
+  const t = currentTemplate()
+  if (!t || !els.editNote) return
+  els.editNote.textContent = t.id === 'origin'
+    ? `当前「${t.label} ${t.name}」：封面 / 过渡页有图位，图片会真正嵌进 PPTX；其他页面和音视频作为素材参考。`
+    : `当前「${t.label} ${t.name}」没有图片位：图片和音视频作为素材参考；换 origin 模板可放封面 / 过渡图。`
+}
+
 function renderQuickTemplate() {
   const t = currentTemplate()
   if (t && els.quickTemplateName) els.quickTemplateName.textContent = `${t.label} ${t.name}`
@@ -1323,6 +1332,7 @@ function applyState(nextIB, message) {
   renderFacts()
   renderSlides()
   renderHero()
+  renderEditNote()
   updateSummary()
   saveDraft()
   toast(message, 'ok', {
@@ -1427,6 +1437,7 @@ async function boot() {
   els.coverAssetList = $('#coverAssetList')
   els.coverAssetAdd = $('#coverAssetAdd')
   els.coverAssetHint = $('#coverAssetHint')
+  els.editNote = $('#editNote')
   els.resultTitle = $('#resultTitle')
   els.resultMeta = $('#resultMeta')
   els.resultDownload = $('#resultDownload')
@@ -1665,7 +1676,7 @@ function bind() {
     applyQuickContent(lastDeck.content)
     closeModal('result')
     setMode('edit')
-    toast('已带入逐页精修；图片以生成的 PPT 为准。', 'ok')
+    toast('已带入逐页编辑；图片以生成的 PPT 为准。', 'ok')
   })
 
   els.runtime.addEventListener('click', () => {

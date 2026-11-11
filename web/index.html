@@ -85,7 +85,7 @@
               <p class="kicker">02 / MODE</p>
               <h2>选一种做法</h2>
             </div>
-            <p class="block-note">有现成材料，让 AI 直接出片；要精确控制，就逐页精修。随时可以切换，模板和草稿都保留。</p>
+            <p class="block-note">有现成材料，让 AI 直接出片；要精确控制，就逐页编辑。随时可以切换，模板和草稿都保留。</p>
           </div>
           <div class="mode-grid" role="tablist" aria-label="制作模式">
             <button class="mode-card active" type="button" role="tab" aria-selected="true" data-mode="quick">
@@ -99,7 +99,7 @@
             <button class="mode-card" type="button" role="tab" aria-selected="false" data-mode="edit">
               <span class="mode-no">02</span>
               <span class="mode-copy">
-                <strong>逐页精修</strong>
+                <strong>逐页编辑</strong>
                 <span>自己排每一页，逐页补图片 / 音视频。</span>
               </span>
               <span class="mode-go" aria-hidden="true">→</span>
@@ -113,7 +113,7 @@
               <p class="kicker">03 / QUICK</p>
               <h2>快速出片</h2>
             </div>
-            <p class="block-note">AI 读材料、定结构，再套当前模板。生成后可下载，也可以切到逐页模式继续改。</p>
+            <p class="block-note">AI 读材料、定结构，再套当前模板。生成后可下载，也可以继续逐页编辑。</p>
           </div>
           <div class="quick-grid">
             <div class="quick-desk">
@@ -170,7 +170,7 @@
                 <span id="quickLabel">AI 分析并生成 PPTX</span>
               </button>
               <p class="quick-status" id="quickStatus" hidden></p>
-              <p class="quick-note">调用当前 DSH 模型，通常 30–90 秒。生成后可直接下载，也可以继续逐页精修。</p>
+              <p class="quick-note">调用当前 DSH 模型，通常 30–90 秒。生成后可直接下载，也可以继续逐页编辑。</p>
             </aside>
           </div>
           <input type="file" id="materialInput" multiple hidden accept=".doc,.docx,.pdf,.md,.markdown,.txt,.csv,.json,.html,.htm,.rtf,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif" />
@@ -180,9 +180,9 @@
           <div class="block-head">
             <div>
               <p class="kicker">03 / EDIT</p>
-              <h2>逐页精修</h2>
+              <h2>逐页编辑</h2>
             </div>
-            <p class="block-note">封面和每一页都能补素材。origin 模板的封面 / 过渡页有图位；其他页面和音视频作为素材参考保留。</p>
+            <p class="block-note" id="editNote">封面和每一页都能补素材。选择模板后，这里会说明图片会进图位还是只作参考。</p>
           </div>
 
           <div class="compose">
@@ -333,7 +333,7 @@
         <div class="result-actions">
           <a class="btn primary lg" id="resultDownload" href="#" download>下载 .pptx</a>
           <button class="btn ghost" id="resultReveal" type="button">在 Finder 中显示</button>
-          <button class="btn ghost" id="resultEdit" type="button" hidden>带入逐页精修</button>
+          <button class="btn ghost" id="resultEdit" type="button" hidden>带入逐页编辑</button>
         </div>
         <p class="result-warn" id="resultWarn" hidden></p>
       </div>
