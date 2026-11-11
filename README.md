@@ -79,6 +79,7 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 - 作者发版时需要同时修改 `package.json` 的 `version` 并 push，红点才会出现；只改代码不改版本不会提示。
 - 每 10 分钟检查一次；网络不通时静默失败，按钮仍然可以点。
 - 更新完成后按 DSH 提示重启/刷新；材料和已生成文件在 `~/.dsh/sjtu-ppt`，不会丢。
+- **0.3.4 之前的旧版没有这个按钮**，同事需要先手动重装一次到 0.3.4 或更高；之后就能用按钮。
 
 ![有新版本时的更新按钮](docs/update.png)
 

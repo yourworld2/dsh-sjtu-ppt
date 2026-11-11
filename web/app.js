@@ -1315,9 +1315,9 @@ function applyUpdateState(data) {
   els.updateBtn.setAttribute('aria-label', `更新插件：${label}`)
 }
 
-async function checkUpdateAvailability() {
+async function checkUpdateAvailability(force = false) {
   try {
-    const response = await fetch('/sjtu-ppt/api/version-check')
+    const response = await fetch(`/sjtu-ppt/api/version-check${force ? '?force=1' : ''}`)
     if (!response.ok) return
     applyUpdateState(await response.json())
   } catch {
@@ -1441,7 +1441,7 @@ async function boot() {
 
   loadRecent()
   loadMaterials()
-  checkUpdateAvailability()
+  checkUpdateAvailability(true)
   setInterval(() => {
     if (document.visibilityState === 'visible') checkUpdateAvailability()
   }, 10 * 60 * 1000)
