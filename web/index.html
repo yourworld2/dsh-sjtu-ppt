@@ -65,11 +65,7 @@
               <h2>选一套模板</h2>
             </div>
             <div class="head-tools">
-              <p class="block-note">8 套模板，左右滑动查看。配色、字体、页码都继承模板母版，两种模式共用同一套模板。</p>
-              <div class="strip-nav" aria-label="浏览模板">
-                <button id="tplPrev" type="button" aria-label="上一套模板">←</button>
-                <button id="tplNext" type="button" aria-label="下一套模板">→</button>
-              </div>
+              <p class="block-note">8 套模板，点选即可；桌面端把鼠标移到封面上，可以看完整 5 页。配色、字体、页码都继承模板母版，两种模式共用同一套模板。</p>
             </div>
           </div>
           <div class="template-grid" id="templateGrid"></div>
@@ -283,6 +279,11 @@
         <span>模板作者：李一 / 徐臻 / 迮佳 / 沈小丹 / 国际处</span>
         <span>字体：HarmonyOS Sans SC</span>
       </footer>
+    </div>
+
+    <div class="tpl-preview" id="tplPreview" aria-hidden="true">
+      <img id="tplPreviewImg" alt="" />
+      <span id="tplPreviewCaption"></span>
     </div>
 
     <div class="modal" id="aiModal" hidden>

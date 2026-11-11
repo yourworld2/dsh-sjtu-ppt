@@ -213,7 +213,6 @@ function syncTemplateActive() {
 }
 
 function renderTemplates() {
-  const scroll = els.grid ? els.grid.scrollLeft : 0
   clear(els.grid)
   for (const t of state.templates) {
     const active = t.id === state.tId
@@ -226,21 +225,22 @@ function renderTemplates() {
     })
     const mock = () => buildMock(t, { title: '饮水思源', subtitle: '上海交通大学', meta: 'SJTU · 2026' })
     const src = thumbFor(t)
+    const cover = el('div', { className: 'tpl-cover' })
     if (src) {
-      const wrap = el('div', { className: 'tpl-thumb-wrap' })
       const img = el('img', {
         className: 'tpl-thumb',
         src,
-        alt: `${t.label} ${t.name} 模板整页封面`,
+        alt: `${t.label} ${t.name} 模板封面`,
         loading: 'lazy',
         decoding: 'async',
       })
-      img.addEventListener('error', () => wrap.replaceWith(mock()), { once: true })
-      wrap.append(img)
-      card.append(wrap)
+      img.addEventListener('error', () => img.replaceWith(mock()), { once: true })
+      cover.append(img)
     } else {
-      card.append(mock())
+      cover.append(mock())
     }
+    cover.append(el('span', { className: 'tpl-pages', text: '5 页' }))
+    card.append(cover)
     card.append(el('span', { className: 'tpl-check', text: '✓' }))
     card.append(
       el(
@@ -253,23 +253,55 @@ function renderTemplates() {
     )
     els.grid.append(card)
   }
-  if (els.grid) els.grid.scrollLeft = scroll
   renderQuickTemplate()
-  requestAnimationFrame(updateTemplateNav)
+  hideTemplatePreview()
 }
 
-function updateTemplateNav() {
-  if (!els.grid || !els.tplPrev || !els.tplNext) return
-  const max = els.grid.scrollWidth - els.grid.clientWidth
-  els.tplPrev.disabled = els.grid.scrollLeft <= 2
-  els.tplNext.disabled = max <= 2 || els.grid.scrollLeft >= max - 2
+let previewTimer = null
+let previewCard = null
+const canHover = typeof matchMedia === 'function' ? matchMedia('(hover: hover)').matches : true
+
+function hideTemplatePreview() {
+  if (previewTimer) clearTimeout(previewTimer)
+  previewTimer = null
+  previewCard = null
+  if (!els.tplPreview) return
+  els.tplPreview.classList.remove('visible')
+  els.tplPreview.setAttribute('aria-hidden', 'true')
 }
 
-function scrollTemplates(direction) {
-  if (!els.grid) return
-  const card = els.grid.querySelector('.tpl-card')
-  const step = (card ? card.getBoundingClientRect().width : 232) + 14
-  els.grid.scrollBy({ left: direction * step * 2, behavior: 'smooth' })
+function showTemplatePreview(card) {
+  const t = state.templates.find((item) => item.id === card.dataset.template)
+  const src = t && thumbFor(t)
+  if (!t || !src || !els.tplPreview) return
+  els.tplPreviewImg.src = src
+  els.tplPreviewImg.alt = `${t.label} ${t.name} 整份模板`
+  els.tplPreviewCaption.textContent = `${t.label} ${t.name} · 5 页`
+
+  const ratio = 2251 / 800
+  let width = Math.min(300, Math.max(236, innerWidth * 0.25))
+  let height = width * ratio
+  const maxHeight = innerHeight - 150
+  if (height > maxHeight) {
+    height = maxHeight
+    width = height / ratio
+  }
+  const outerWidth = width + 16
+  const totalHeight = height + 42
+  const rect = card.getBoundingClientRect()
+
+  let left = rect.right + 14
+  if (left + outerWidth > innerWidth - 14) left = rect.left - outerWidth - 14
+  if (left < 14) left = Math.max(14, Math.min(innerWidth - outerWidth - 14, rect.left + rect.width / 2 - outerWidth / 2))
+
+  let top = rect.top - 16
+  top = Math.max(74, Math.min(innerHeight - totalHeight - 14, top))
+
+  els.tplPreview.style.width = `${Math.round(outerWidth)}px`
+  els.tplPreview.style.left = `${Math.round(left)}px`
+  els.tplPreview.style.top = `${Math.round(top)}px`
+  els.tplPreview.classList.add('visible')
+  els.tplPreview.setAttribute('aria-hidden', 'false')
 }
 
 function renderFacts() {
@@ -304,6 +336,7 @@ function renderFacts() {
 function setTemplate(id) {
   if (!state.templates.some((t) => t.id === id)) return
   state.tId = id
+  hideTemplatePreview()
   syncTemplateActive()
   renderFacts()
   renderHero()
@@ -1390,8 +1423,9 @@ async function checkHealth() {
 
 async function boot() {
   els.grid = $('#templateGrid')
-  els.tplPrev = $('#tplPrev')
-  els.tplNext = $('#tplNext')
+  els.tplPreview = $('#tplPreview')
+  els.tplPreviewImg = $('#tplPreviewImg')
+  els.tplPreviewCaption = $('#tplPreviewCaption')
   els.tplFacts = $('#tplFacts')
   els.heroTemplateName = $('#heroTemplateName')
   els.heroPages = $('#heroPages')
@@ -1490,13 +1524,33 @@ async function boot() {
 function bind() {
   els.grid.addEventListener('click', (event) => {
     const card = event.target.closest('[data-template]')
-    if (card) setTemplate(card.dataset.template)
+    if (card) {
+      hideTemplatePreview()
+      setTemplate(card.dataset.template)
+    }
   })
 
-  els.tplPrev.addEventListener('click', () => scrollTemplates(-1))
-  els.tplNext.addEventListener('click', () => scrollTemplates(1))
-  els.grid.addEventListener('scroll', updateTemplateNav, { passive: true })
-  addEventListener('resize', updateTemplateNav)
+  els.grid.addEventListener('mouseover', (event) => {
+    if (!canHover) return
+    const card = event.target.closest('[data-template]')
+    if (!card || card === previewCard) return
+    previewCard = card
+    if (previewTimer) clearTimeout(previewTimer)
+    previewTimer = setTimeout(() => {
+      if (previewCard === card) showTemplatePreview(card)
+    }, 120)
+  })
+
+  els.grid.addEventListener('mouseout', (event) => {
+    const card = event.target.closest('[data-template]')
+    if (!card) return
+    if (event.relatedTarget && card.contains(event.relatedTarget)) return
+    if (previewCard === card) hideTemplatePreview()
+  })
+
+  els.grid.addEventListener('mouseleave', hideTemplatePreview)
+  addEventListener('scroll', hideTemplatePreview, { passive: true, capture: true })
+  addEventListener('resize', hideTemplatePreview)
 
   document.addEventListener('click', (event) => {
     const add = event.target.closest('[data-add]')
@@ -1686,6 +1740,7 @@ function bind() {
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
+      hideTemplatePreview()
       for (const name of ['ai', 'result', 'text']) closeModal(name)
     }
   })

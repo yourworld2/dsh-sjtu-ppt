@@ -941,67 +941,18 @@ code {
   gap: 14px;
 }
 
-.strip-nav {
-  display: flex;
-  gap: 4px;
-  flex: none;
-}
-
-.strip-nav button {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--card);
-  color: var(--ink-2);
-  font-size: 13px;
-  line-height: 1;
-}
-
-.strip-nav button:hover:not(:disabled) {
-  border-color: var(--red);
-  color: var(--red);
-}
-
-.strip-nav button:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
 /* ── template grid ───────────────────────────────────── */
 
 .template-grid {
-  display: flex;
-  gap: 14px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 4px 2px 12px;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
-  overscroll-behavior-x: contain;
-}
-
-.template-grid::-webkit-scrollbar {
-  height: 8px;
-}
-
-.template-grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.template-grid::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--ink) 18%, transparent);
-  border-radius: 99px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 14px;
 }
 
 .tpl-card {
   position: relative;
-  flex: 0 0 232px;
-  scroll-snap-align: start;
-  padding: 9px 9px 13px;
+  min-width: 0;
+  padding: 8px 8px 12px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -1021,36 +972,51 @@ code {
   box-shadow: 0 0 0 1px var(--red), var(--shadow-s);
 }
 
-.tpl-card .mock,
-.tpl-thumb-wrap {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* 模板缩略图：按文件名一一对应，contain 完整展示整张长图，不裁切 */
-.tpl-thumb-wrap {
+.tpl-cover {
   position: relative;
-  aspect-ratio: 1212 / 3411;
-  display: grid;
-  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
   background: var(--paper-2);
   border: 1px solid var(--line);
+  border-radius: 8px;
 }
 
+.tpl-cover .mock {
+  border-radius: 0;
+}
+
+/* 长图默认只露封面：宽度撑满，16:9 视窗裁掉下面的内页 */
 .tpl-thumb {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
+  height: auto;
+  transition: transform 0.35s ease;
   -webkit-user-drag: none;
   user-select: none;
 }
 
+.tpl-card:hover .tpl-thumb {
+  transform: scale(1.03);
+}
+
+.tpl-pages {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(27, 26, 24, 0.66);
+  color: #f7f3ea;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(4px);
+}
+
 .tpl-check {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 13px;
+  right: 13px;
   z-index: 5;
   display: grid;
   place-items: center;
@@ -1075,27 +1041,32 @@ code {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 8px;
-  padding: 11px 4px 0;
+  gap: 6px;
+  padding: 10px 3px 0;
 }
 
 .tpl-name {
+  min-width: 0;
+  overflow: hidden;
   font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
   color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tpl-name b {
   font-family: var(--display);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0;
-  margin-left: 6px;
+  margin-left: 5px;
 }
 
 .tpl-tag {
-  font-size: 9.5px;
+  flex: none;
+  font-size: 9px;
   color: var(--red);
   background: var(--red-soft);
   border-radius: 4px;
@@ -1104,11 +1075,53 @@ code {
 }
 
 .tpl-tagline {
-  margin: 6px 4px 0;
-  font-size: 11px;
+  margin: 5px 3px 0;
+  font-size: 10.5px;
   line-height: 1.55;
   color: var(--ink-3);
   min-height: 2.9em;
+}
+
+/* 悬停浮层：完整长图，不参与网格布局 */
+.tpl-preview {
+  position: fixed;
+  z-index: 80;
+  padding: 8px;
+  background: var(--card);
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow-l);
+  opacity: 0;
+  transform: translateY(4px) scale(0.97);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  will-change: opacity, transform;
+}
+
+.tpl-preview.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.tpl-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: var(--paper-2);
+}
+
+.tpl-preview span {
+  display: block;
+  overflow: hidden;
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ── materials ────────────────────────────────────────── */
@@ -2659,8 +2672,8 @@ html[data-scheme="dark"] .ext-xls {
 /* ── responsive ───────────────────────────────────────── */
 
 @media (max-width: 1040px) {
-  .tpl-card {
-    flex-basis: 210px;
+  .template-grid {
+    gap: 14px 10px;
   }
 }
 
@@ -2739,7 +2752,15 @@ html[data-scheme="dark"] .ext-xls {
   }
 
   .tpl-card {
-    flex-basis: 196px;
+    padding: 7px 7px 10px;
+  }
+
+  .tpl-name b {
+    font-size: 12.5px;
+  }
+
+  .tpl-tagline {
+    font-size: 10px;
   }
 
   .head-tools {
@@ -2845,8 +2866,9 @@ html[data-scheme="dark"] .ext-xls {
     letter-spacing: 0.06em;
   }
 
-  .tpl-card {
-    flex-basis: 176px;
+  .template-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 10px;
   }
 
   .tpl-tagline {

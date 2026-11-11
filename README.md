@@ -138,9 +138,11 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 
 内置模板没有「左 / 右」占位符，`left` / `right` 双栏字段只对用户自带的 `.pptx` 模板生效。
 
-![模板海报条](docs/templates.png)
+![模板矩阵](docs/templates.png)
 
-模板卡片的缩略图在 `web/assets/thumbs/`，文件名与 `skills/sjtu-ppt/assets/*.pptx` 一一对应：`SJTU-wine.pptx` → `SJTU-wine.jpg`。卡片是横向海报条，默认用 `object-fit: contain` 完整展示整张长图（5 页拼接），不裁切；替换同名图片即可换缩略图。
+模板卡片的缩略图在 `web/assets/thumbs/`，文件名与 `skills/sjtu-ppt/assets/*.pptx` 一一对应：`SJTU-wine.pptx` → `SJTU-wine.jpg`。8 张卡按 4×2 矩阵排列，默认只露封面 16:9；桌面端悬停时在卡片旁浮出完整 5 页长图，不改变网格布局。替换同名图片即可换缩略图。
+
+![悬停看整份](docs/templates-hover.png)
 
 ## 内容 JSON
 
