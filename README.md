@@ -143,7 +143,7 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 | id | 名称 | 特点 |
 | --- | --- | --- |
 | `basic` | 交大红 | 校门线稿、交大红主色，默认款 |
-| `130` | 校门红 | 校庆红横线，正式典礼 |
+| `130` | 校庆130 | 校庆红横线，正式典礼 |
 | `wine` | 酒红 | 酒红斜切 + 饮水思源碑实景 |
 | `crimson` | 深红 | 红色圆弧、大留白 |
 | `origin` | 经典 | 封面 / 过渡页支持图片占位 |

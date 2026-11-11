@@ -76,6 +76,7 @@ const LAYOUT_DEFAULT = {
 }
 
 const currentTemplate = () => state.templates.find((t) => t.id === state.tId) || state.templates[0] || null
+const templateTitle = (t) => (t ? t.display || `${t.label} ${t.name}` : '')
 const layoutInfo = (id) => state.layouts.find((l) => l.id === id) || { id, label: id, hint: '' }
 
 /* ── DOM 小工具 ───────────────────────────────────────── */
@@ -190,7 +191,7 @@ function buildMock(t, opts = {}) {
 function renderHero() {
   const t = currentTemplate()
   if (!t) return
-  els.heroTemplateName.textContent = `${t.label} ${t.name}`
+  els.heroTemplateName.textContent = templateTitle(t)
 }
 
 /* ── 模板 ─────────────────────────────────────────────── */
@@ -218,7 +219,7 @@ function renderTemplates() {
       className: `tpl-card${active ? ' active' : ''}`,
       dataset: { template: t.id },
       'aria-pressed': active ? 'true' : 'false',
-      'aria-label': `${t.label} ${t.name} 模板`,
+      'aria-label': `${templateTitle(t)} 模板`,
     })
     const mock = () => buildMock(t, { title: '饮水思源', subtitle: '上海交通大学', meta: 'SJTU · 2026' })
     const src = thumbFor(t)
@@ -227,7 +228,7 @@ function renderTemplates() {
       const img = el('img', {
         className: 'tpl-thumb',
         src,
-        alt: `${t.label} ${t.name} 模板封面`,
+        alt: `${templateTitle(t)} 模板封面`,
         loading: 'lazy',
         decoding: 'async',
       })
@@ -243,7 +244,7 @@ function renderTemplates() {
       el(
         'div',
         { className: 'tpl-meta' },
-        el('span', { className: 'tpl-name' }, el('b', { text: t.label }), ` ${t.name}`),
+        el('span', { className: 'tpl-name' }, el('b', { text: t.label }), t.display ? '' : ` ${t.name}`),
         el('span', { className: 'tpl-tag', text: t.id === 'basic' ? '默认' : t.image ? '可换图' : '内置' }),
       ),
       el('p', { className: 'tpl-tagline', text: t.tagline }),
@@ -272,8 +273,8 @@ function showTemplatePreview(card) {
   const src = t && thumbFor(t)
   if (!t || !src || !els.tplPreview) return
   els.tplPreviewImg.src = src
-  els.tplPreviewImg.alt = `${t.label} ${t.name} 整份模板`
-  els.tplPreviewCaption.textContent = `${t.label} ${t.name} · 5 页`
+  els.tplPreviewImg.alt = `${templateTitle(t)} 整份模板`
+  els.tplPreviewCaption.textContent = `${templateTitle(t)} · 5 页`
 
   const ratio = 2251 / 800
   let width = Math.min(300, Math.max(236, innerWidth * 0.25))
@@ -1035,13 +1036,13 @@ function renderEditNote() {
   const t = currentTemplate()
   if (!t || !els.editNote) return
   els.editNote.textContent = t.id === 'origin'
-    ? `当前「${t.label} ${t.name}」：封面 / 过渡页有图位，图片会真正嵌进 PPTX；其他页面和音视频作为素材参考。`
-    : `当前「${t.label} ${t.name}」没有图片位：图片和音视频作为素材参考；换 origin 模板可放封面 / 过渡图。`
+    ? `当前「${templateTitle(t)}」：封面 / 过渡页有图位，图片会真正嵌进 PPTX；其他页面和音视频作为素材参考。`
+    : `当前「${templateTitle(t)}」没有图片位：图片和音视频作为素材参考；换 origin 模板可放封面 / 过渡图。`
 }
 
 function renderQuickTemplate() {
   const t = currentTemplate()
-  if (t && els.quickTemplateName) els.quickTemplateName.textContent = `${t.label} ${t.name}`
+  if (t && els.quickTemplateName) els.quickTemplateName.textContent = templateTitle(t)
 }
 
 function assetHintText(layout) {
