@@ -142,17 +142,17 @@
               <div class="quick-pages">
                 <label class="quick-label" for="quickPagesInput">页数</label>
                 <div class="pages-field">
-                  <input id="quickPagesInput" type="number" min="4" max="20" step="1" inputmode="numeric" placeholder="自动" aria-describedby="quickPagesHint" />
+                  <input id="quickPagesInput" type="number" min="7" max="20" step="1" inputmode="numeric" placeholder="自动" aria-describedby="quickPagesHint" />
                   <span>页</span>
                 </div>
               </div>
-              <p class="quick-hint" id="quickPagesHint">留空时由 AI 按材料判断，通常 6–12 页（含封面）。</p>
+              <p class="quick-hint" id="quickPagesHint">至少 7 页（含封面）；留空则按材料自动预估，通常 7–12 页。</p>
               <button class="btn primary lg quick-generate" id="quickGenerate" type="button">
                 <span class="spinner" id="quickSpinner" hidden></span>
                 <span id="quickLabel">AI 分析并生成 PPTX</span>
               </button>
               <p class="quick-status" id="quickStatus" hidden></p>
-              <p class="quick-note">AI 读材料、定结构，再套当前模板 · 通常 30–90 秒 · 生成后可继续逐页编辑。</p>
+              <p class="quick-note">AI 读材料、定结构，每个目录章节都会生成过渡页 · 通常 30–90 秒 · 生成后可继续逐页编辑。</p>
             </aside>
           </div>
           <input type="file" id="materialInput" multiple hidden accept=".doc,.docx,.pdf,.md,.markdown,.txt,.csv,.json,.html,.htm,.rtf,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif" />

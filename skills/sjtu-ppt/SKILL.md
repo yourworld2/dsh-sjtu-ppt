@@ -29,6 +29,7 @@ dependency:
 2. **确认内容** — 引导用户提供或编写 JSON 内容定义。
    - 内容格式规范见 [references/content-format.md](references/content-format.md)。
    - 若用户仅提供文字大纲，由智能体将其转换为合规 JSON。
+   - 结构规则：目录每一项都要有一张同名 `section` 过渡页，紧接在该章第一张内页之前；`section` 数必须等于目录项数，禁止只写一张过渡页覆盖多章，每个 `section` 后至少 1 张内页。
 3. **执行生成** — 调用脚本自动生成 PPTX。
    - 脚本调用示例：`python scripts/generate_pptx.py --template ./template.pptx --content ./content.json --output ./output.pptx`
    - 若用户未提供模板，可省略 `--template`：脚本将自动使用内置 SJTU-basic 模板。
@@ -76,6 +77,7 @@ dependency:
 > 模板作者备注：basic、origin、130 模板作者：李一；wine、crimson 模板作者：徐臻；star 模板作者：迮佳；blue 模板作者：沈小丹；global 模板：国际处。
 
 ## 注意事项
+- 目录有几个章节，就要有几张 `section` 过渡页；每章开头一张，顺序与目录一致，不要用一张过渡页带过所有章节。
 - 仅在需要时读取参考，保持上下文简洁。
 - 操作脆弱时优先调用脚本并校验结果（建议至少运行一次 `smoke_test.py` 确认环境）。
 - 充分利用智能体能力，避免为简单任务编写脚本。

@@ -151,6 +151,18 @@ All 8 built-in templates display page numbers on content slides. Layouts without
     },
     {
       "layout": "content",
+      "title": "Overview",
+      "content": [
+        "Q3 roadmap for the core platform",
+        "Three workstreams: API, regions, reliability"
+      ]
+    },
+    {
+      "layout": "section",
+      "title": "Key Objectives"
+    },
+    {
+      "layout": "content",
       "title": "Key Objectives",
       "content": [
         "Launch v2.0 API",
@@ -159,6 +171,10 @@ All 8 built-in templates display page numbers on content slides. Layouts without
         {"text": "EMEA rollout", "level": 1},
         "Improve system reliability to 99.99%"
       ]
+    },
+    {
+      "layout": "section",
+      "title": "Timeline & Owners"
     },
     {
       "layout": "content",
@@ -190,3 +206,4 @@ All 8 built-in templates display page numbers on content slides. Layouts without
 3. Each slide object must be a dictionary.
 4. `content` must be a string or array when provided.
 5. If `layout` is omitted, `content` is assumed.
+6. Every item in the `toc` content must have its own same-titled `section` slide immediately before that chapter's first content slide. The number of `section` slides must equal the number of TOC items; never use one transition slide for multiple chapters. Each `section` needs at least one following content slide.

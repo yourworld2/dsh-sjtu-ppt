@@ -1056,7 +1056,7 @@ function coverAssetHintText() {
 
 function setQuickPages(pages) {
   const n = Number.parseInt(pages, 10)
-  const next = Number.isFinite(n) && n >= 4 ? Math.min(20, n) : null
+  const next = Number.isFinite(n) && n > 0 ? Math.min(20, Math.max(7, n)) : null
   state.quickPages = next
   if (els.quickPages) els.quickPages.value = next ? String(next) : ''
 }
@@ -1064,7 +1064,7 @@ function setQuickPages(pages) {
 function readQuickPages() {
   const raw = els.quickPages ? els.quickPages.value.trim() : ''
   const n = Number.parseInt(raw, 10)
-  return Number.isFinite(n) && n >= 4 ? Math.min(20, n) : null
+  return Number.isFinite(n) && n > 0 ? Math.min(20, Math.max(7, n)) : null
 }
 
 function setMode(mode, { scroll = true } = {}) {
@@ -1529,7 +1529,7 @@ function bind() {
   }
   els.quickPages.addEventListener('input', () => {
     const n = Number.parseInt(els.quickPages.value, 10)
-    state.quickPages = Number.isFinite(n) && n >= 4 ? Math.min(20, n) : null
+    state.quickPages = Number.isFinite(n) && n > 0 ? Math.min(20, Math.max(7, n)) : null
   })
   els.quickPages.addEventListener('change', () => setQuickPages(els.quickPages.value))
   els.quickGenerate.addEventListener('click', runQuick)
