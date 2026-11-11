@@ -13,7 +13,7 @@
 - 注册 `sjtu-ppt` 技能和 `sjtu_ppt_generate` 工具，对话里也能生成并交付
 - 使用 DSH 桌面版自带的 Python（含 python-pptx），不额外装依赖
 - 界面字体使用 HarmonyOS Sans SC（Regular / Bold）
-- 已在 DSH 0.2.1-rc.5 + python-pptx 1.0.2 下验证：真实侧栏入口、生成、下载、AI 草稿桥接都通过
+- 已在 DSH 0.2.1-rc.5 + python-pptx 1.0.2 下验证：真实侧栏入口、快速生成、逐页素材、下载都通过
 
 ![交大演示侧栏工作台](docs/panel.png)
 
@@ -96,10 +96,6 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 
 ## 用
 
-### 让 AI 写
-
-点「让 AI 写」，填主题 / 听众 / 想讲什么，会打开一个新对话，把要求填进输入框（不自动发送）。AI 会用 `sjtu-ppt` 技能，需要时调用 `sjtu_ppt_generate` 工具，把 `.pptx` 放到当前工作区并交给 `present`。
-
 ### 在对话里直接用
 
 技能名：`sjtu-ppt`；工具名：`sjtu_ppt_generate`。工具参数：
@@ -119,7 +115,7 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 - **快速模式材料台**：Word（docx / doc / rtf）、PDF、Markdown / 文本 / CSV / JSON、PPT / PPTX、Excel / XLSX、图片，单个 ≤ 25 MB。拖入或点击选择，文字自动提取，点「看全文」检查。
 - **逐页素材**：图片（png / jpg / webp / gif）、视频（mp4 / mov / webm / m4v）、音频（mp3 / wav / m4a / aac / ogg），单个 ≤ 25 MB；上传时会记录图片宽高。
 - 所有文件只留在本机：`~/.dsh/sjtu-ppt/materials/<id>/`（原文件 + `text.txt` + `meta.json`），不上传云端。材料台和逐页素材用 `scope` 区分，互不混在一起。
-- 快速模式会把材料摘录和全文路径放进模型提示词；AI 会话（「让 AI 写」）也会带上材料。
+- 快速模式会把材料摘录和全文路径放进模型提示词。
 - `origin` 模板的封面 / 过渡页有图片占位，图片会嵌入；其他模板或页面没有图位，图片只作为素材参考。音视频不会自动嵌入 `.pptx`。
 - 旧版 `.ppt` / `.xls` 可以上传，但取字会提示另存为 `.pptx` / `.xlsx`。
 
@@ -182,7 +178,7 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 export DSH_SJTU_PPT_PYTHON=/path/to/python3
 ```
 
-页面顶部会显示「Python 3.12 · 可生成」；读不到环境时会变成红色状态，点一下能看到具体原因。
+生成时如果找不到 Python，会直接返回错误，不影响已经生成的文件。
 
 ## 开发
 

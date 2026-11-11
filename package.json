@@ -1,6 +1,6 @@
 {
   "name": "dsh-sjtu-ppt",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "交大演示 · DeepSeek Harness 插件：把 sjtu-ppt 技能和 8 套上海交大 PPT 模板装进侧栏，填内容或让 AI 写，直接生成可编辑的 .pptx。",
   "type": "module",
   "main": "lib/index.js",

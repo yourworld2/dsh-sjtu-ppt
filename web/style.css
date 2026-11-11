@@ -296,6 +296,13 @@ code {
   border-radius: 10px;
 }
 
+.btn.hero-start {
+  min-width: 154px;
+  padding: 15px 30px;
+  font-size: 15px;
+  border-radius: 11px;
+}
+
 .btn:disabled {
   opacity: 0.55;
   cursor: wait;

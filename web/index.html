@@ -14,13 +14,6 @@
           <span class="seal">交</span>
           <span class="brand-text"><strong>交大演示</strong><small>SJTU DECK STUDIO</small></span>
         </a>
-        <div class="top-actions">
-          <button class="runtime" id="runtime" type="button" title="检查生成环境">
-            <span class="dot"></span><span id="runtimeText">检查环境…</span>
-          </button>
-          <button class="btn ghost sm" id="importBtn" type="button">导入 JSON</button>
-          <button class="btn primary sm" id="aiTop" type="button">让 AI 写</button>
-        </div>
       </header>
 
       <main id="top">
@@ -39,14 +32,11 @@
             <div class="hero-bottom">
               <div class="hero-side">
                 <div class="hero-actions">
-                  <a class="btn primary lg" href="#modes">开始制作</a>
-                  <button class="btn quiet lg" id="aiHero" type="button">让 AI 从大纲写 <span class="arrow">↗</span></button>
+                  <a class="btn primary lg hero-start" href="#modes">开始制作</a>
                 </div>
                 <div class="hero-current">
                   <span class="hero-dot"></span>当前模板
                   <strong id="heroTemplateName">交大红 basic</strong>
-                  <span class="sep">/</span>
-                  <span id="heroPages">6 页</span>
                 </div>
               </div>
               <div class="hero-stats" aria-label="插件能力">
@@ -286,28 +276,6 @@
       <span id="tplPreviewCaption"></span>
     </div>
 
-    <div class="modal" id="aiModal" hidden>
-      <div class="modal-backdrop" data-close="ai"></div>
-      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
-        <button class="modal-x" data-close="ai" aria-label="关闭">×</button>
-        <p class="kicker">AI DRAFT</p>
-        <h3 id="aiTitle">让 AI 从大纲开始</h3>
-        <p class="modal-lede">
-          会打开一个新对话，并把要求填进输入框，不会自动发送。AI 会用随附的 sjtu-ppt 技能和
-          <strong id="aiTemplateName">交大红 basic</strong> 模板。
-        </p>
-        <p class="ai-material-note" id="aiMaterialNote" hidden></p>
-        <label class="field">
-          <span>主题 / 听众 / 想讲什么</span>
-          <textarea id="aiBrief" rows="5" maxlength="2000" placeholder="例如：给学院做 15 分钟的年度科研汇报，重点是三个项目进展和明年的申报计划。"></textarea>
-        </label>
-        <div class="modal-actions">
-          <button class="btn ghost" data-close="ai" type="button">取消</button>
-          <button class="btn primary" id="aiStartBtn" type="button">打开新对话</button>
-        </div>
-      </div>
-    </div>
-
     <div class="modal" id="textModal" hidden>
       <div class="modal-backdrop" data-close="text"></div>
       <div class="modal-panel text-panel" role="dialog" aria-modal="true" aria-labelledby="textTitle">
@@ -341,7 +309,6 @@
     </div>
 
     <div class="toast-stack" id="toasts" aria-live="polite"></div>
-    <input type="file" id="fileInput" accept=".json,application/json" hidden />
     <input type="file" id="assetInput" multiple hidden accept="image/*,video/*,audio/*" />
     <script src="/sjtu-ppt/app.js" defer></script>
   </body>

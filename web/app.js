@@ -29,12 +29,10 @@ const state = {
   coverAssets: [],
   mode: 'quick',
   quickPages: 8,
-  health: null,
 }
 
 let lastDeck = null
 let saveTimer = null
-let healthDetail = null
 
 const els = {}
 
@@ -192,8 +190,6 @@ function renderHero() {
   const t = currentTemplate()
   if (!t) return
   els.heroTemplateName.textContent = `${t.label} ${t.name}`
-  const pages = visibleSlides().length + (state.title.trim() ? 1 : 0)
-  els.heroPages.textContent = `${pages} 页`
 }
 
 /* ── 模板 ─────────────────────────────────────────────── */
@@ -345,7 +341,6 @@ function setTemplate(id) {
   renderCoverAssets()
   if (state.mode === 'edit') renderSlides()
   updateSummary()
-  if (!$('#aiModal').hidden) $('#aiTemplateName').textContent = `${currentTemplate().label} ${currentTemplate().name}`
   debounceSave()
 }
 
@@ -670,7 +665,6 @@ function updateSummary() {
   const t = currentTemplate()
   const pages = visibleSlides().length + (state.title.trim() ? 1 : 0)
   els.slideCount.textContent = `${state.slides.length} 个正文页`
-  els.heroPages.textContent = `${pages} 页`
   els.genTitle.textContent = state.title.trim() || '未命名演示'
   els.genMeta.textContent = t ? `${t.label} 模板 · ${pages} 页 · ${state.slides.length} 个正文页` : `${pages} 页`
 }
@@ -1249,94 +1243,6 @@ function exportJson() {
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-async function importJson(file) {
-  try {
-    const text = await file.text()
-    const data = JSON.parse(text)
-    applyDraft(data)
-    renderTemplates()
-    renderFacts()
-    renderSlides()
-    renderHero()
-    updateSummary()
-    saveDraft()
-    toast(`已导入「${state.title || '未命名'}」，${state.slides.length} 个正文页。`, 'ok')
-  } catch (error) {
-    toast(`导入失败：${error.message}`, 'error')
-  }
-}
-
-/* ── AI 草稿 ──────────────────────────────────────────── */
-
-function aiPrompt() {
-  const t = currentTemplate()
-  const brief = els.aiBrief.value.trim()
-  const textMats = state.materials.filter((m) => m.chars > 0)
-  const imageMats = state.materials.filter((m) => m.kind === 'image')
-  const lines = [
-    '用 sjtu-ppt skill 帮我做一份交大风格的 PPT。',
-    '',
-    `模板：${t.label}（${t.name}，${t.file}）`,
-    brief ? `主题与要求：\n${brief}` : '主题我还没想好。先问我三个问题：讲给谁听、想讲什么、大概多少页。',
-  ]
-
-  if (textMats.length) {
-    lines.push('', '我上传了这些材料，请优先依据材料内容写，不要编造材料里没有的数据：')
-    let budget = 6000
-    for (const material of textMats.slice(0, 8)) {
-      if (budget <= 0) break
-      const excerpt = material.excerpt.slice(0, Math.min(1600, budget))
-      budget -= excerpt.length
-      lines.push(`【${material.name}】`, excerpt)
-    }
-    lines.push('', '材料全文在本地，需要细节时可以直接读：')
-    for (const material of textMats) lines.push(`- ${material.name}：${material.textPath}`)
-  }
-
-  if (imageMats.length) {
-    lines.push('', '图片素材（可用于封面 / 过渡页）：')
-    for (const material of imageMats) lines.push(`- ${material.name}：${material.filePath}`)
-  }
-
-  const pageAssets = []
-  ;(state.coverAssets || []).forEach((asset) => pageAssets.push(`封面：${asset.name} — ${asset.filePath}`))
-  state.slides.forEach((slide, index) => {
-    for (const asset of slide.assets || []) pageAssets.push(`第 ${index + 1} 页（${layoutInfo(slide.layout).label}）：${asset.name} — ${asset.filePath}`)
-  })
-  if (pageAssets.length) {
-    lines.push('', '逐页素材（图片会尽量放进模板图位，音视频仅作参考）：')
-    lines.push(...pageAssets)
-  }
-
-  lines.push(
-    '',
-    '请先给我 6–8 页的提纲；如果信息已经够，也可以直接生成。生成时用 sjtu_ppt_generate 工具，把 .pptx 放到当前工作区，并把路径告诉我。',
-  )
-  return lines.join('\n')
-}
-
-function openAi(prefill = '') {
-  const t = currentTemplate()
-  if (t) els.aiTemplateName.textContent = `${t.label} ${t.name}`
-  if (typeof prefill === 'string' && prefill && !els.aiBrief.value.trim()) els.aiBrief.value = prefill
-  const mats = state.materials
-  const chars = mats.filter((m) => m.chars > 0).reduce((sum, m) => sum + m.chars, 0)
-  els.aiMaterialNote.hidden = mats.length === 0
-  if (mats.length) {
-    const names = mats.slice(0, 3).map((m) => m.name).join('、')
-    els.aiMaterialNote.textContent = `会带上 ${mats.length} 份材料${chars ? `（约 ${Math.min(chars, 6000).toLocaleString('zh-CN')} 字摘录）` : ''}：${names}${mats.length > 3 ? ' 等' : ''}`
-  }
-  openModal('ai')
-  setTimeout(() => els.aiBrief.focus(), 80)
-}
-
-function startAi() {
-  const prompt = aiPrompt()
-  window.parent.postMessage({ type: 'sjtu-ppt:start', prompt }, location.origin)
-  closeModal('ai')
-  toast('已打开新对话，草稿在输入框里；补完直接发送。', 'ok')
-}
-
 /* ── 模态框 ───────────────────────────────────────────── */
 
 function openModal(name) {
@@ -1394,31 +1300,6 @@ function clearAll() {
   )
 }
 
-/* ── 环境检查 ─────────────────────────────────────────── */
-
-async function checkHealth() {
-  try {
-    const response = await fetch('/sjtu-ppt/api/health')
-    const data = await response.json()
-    state.health = data.python
-    healthDetail = data
-    if (data.python?.ok) {
-      els.runtime.classList.add('ok')
-      els.runtime.classList.remove('bad')
-      els.runtimeText.textContent = `Python ${data.python.python || '3.x'} · 可生成`
-      els.runtime.title = `${data.python.path} · python-pptx ${data.python.version}`
-    } else {
-      els.runtime.classList.add('bad')
-      els.runtime.classList.remove('ok')
-      els.runtimeText.textContent = '生成环境未就绪'
-      els.runtime.title = data.python?.error || ''
-    }
-  } catch {
-    els.runtime.classList.add('bad')
-    els.runtimeText.textContent = '生成环境未知'
-  }
-}
-
 /* ── 初始化 ───────────────────────────────────────────── */
 
 async function boot() {
@@ -1428,7 +1309,6 @@ async function boot() {
   els.tplPreviewCaption = $('#tplPreviewCaption')
   els.tplFacts = $('#tplFacts')
   els.heroTemplateName = $('#heroTemplateName')
-  els.heroPages = $('#heroPages')
   els.fTitle = $('#fTitle')
   els.fSubtitle = $('#fSubtitle')
   els.fAuthor = $('#fAuthor')
@@ -1451,7 +1331,6 @@ async function boot() {
   els.materialCount = $('#materialCount')
   els.materialSummary = $('#materialSummary')
   els.dropStatus = $('#dropStatus')
-  els.aiMaterialNote = $('#aiMaterialNote')
   els.textTitle = $('#textTitle')
   els.textMeta = $('#textMeta')
   els.materialText = $('#materialText')
@@ -1478,10 +1357,6 @@ async function boot() {
   els.resultCover = $('#resultCover')
   els.resultWarn = $('#resultWarn')
   els.resultEdit = $('#resultEdit')
-  els.aiBrief = $('#aiBrief')
-  els.aiTemplateName = $('#aiTemplateName')
-  els.runtime = $('#runtime')
-  els.runtimeText = $('#runtimeText')
   els.toasts = $('#toasts')
 
   document.documentElement.dataset.scheme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
@@ -1505,6 +1380,7 @@ async function boot() {
   renderFacts()
   renderSlides()
   renderHero()
+  renderEditNote()
   updateSummary()
   renderCoverAssets()
   setQuickPages(state.quickPages)
@@ -1516,7 +1392,6 @@ async function boot() {
   }
   setMode(savedMode === 'edit' ? 'edit' : 'quick', { scroll: false })
 
-  checkHealth()
   loadRecent()
   loadMaterials()
 }
@@ -1585,7 +1460,6 @@ function bind() {
     if (close) closeModal(close.dataset.close)
   })
 
-  for (const button of ['#aiTop', '#aiHero']) $(button).addEventListener('click', () => openAi())
   for (const card of $$('.mode-card')) {
     card.addEventListener('click', () => setMode(card.dataset.mode))
   }
@@ -1594,7 +1468,6 @@ function bind() {
     if (button) setQuickPages(button.dataset.pages)
   })
   els.quickGenerate.addEventListener('click', runQuick)
-  $('#aiStartBtn').addEventListener('click', startAi)
 
   els.dropZone.addEventListener('click', () => {
     if (!els.dropZone.classList.contains('busy')) els.materialInput.click()
@@ -1709,13 +1582,6 @@ function bind() {
   $('#generateBtn').addEventListener('click', generate)
   $('#exportBtn').addEventListener('click', exportJson)
 
-  $('#importBtn').addEventListener('click', () => $('#fileInput').click())
-  $('#fileInput').addEventListener('change', (event) => {
-    const file = event.target.files && event.target.files[0]
-    if (file) importJson(file)
-    event.target.value = ''
-  })
-
   els.recentList.addEventListener('click', (event) => {
     const reveal = event.target.closest('[data-reveal]')
     if (reveal) revealDeck(reveal.dataset.reveal)
@@ -1733,15 +1599,10 @@ function bind() {
     toast('已带入逐页编辑；图片以生成的 PPT 为准。', 'ok')
   })
 
-  els.runtime.addEventListener('click', () => {
-    if (state.health?.ok) toast(`生成环境：Python ${state.health.python || '3.x'} · python-pptx ${state.health.version}\n${state.health.path}`, 'ok')
-    else toast(healthDetail?.python?.error || '还读不到生成环境。', 'error')
-  })
-
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       hideTemplatePreview()
-      for (const name of ['ai', 'result', 'text']) closeModal(name)
+      for (const name of ['result', 'text']) closeModal(name)
     }
   })
 
@@ -1752,7 +1613,6 @@ function bind() {
     if (data.type === 'sjtu-ppt:scheme' && (data.scheme === 'dark' || data.scheme === 'light')) {
       document.documentElement.dataset.scheme = data.scheme
     }
-    if (data.type === 'sjtu-ppt:start-failed') toast(`打开新对话失败：${data.message || '未知错误'}`, 'error')
   })
 }
 
