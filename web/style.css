@@ -426,6 +426,9 @@ code {
 }
 
 .hero-stamp {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
   margin-bottom: 22px;
   font-family: var(--mono);
   font-size: 9px;
