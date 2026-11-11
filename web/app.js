@@ -5,6 +5,7 @@ const STORE_KEY = 'sjtu-ppt:draft:v1'
 const MODE_KEY = 'sjtu-ppt:mode:v1'
 const THUMB_BASE = '/sjtu-ppt/assets/thumbs/'
 const ASSET_EXT = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif', 'mp4', 'mov', 'webm', 'm4v', 'mp3', 'wav', 'm4a', 'aac', 'ogg'])
+const UPDATE_PROMPT = '根据 https://github.com/yourworld2/dsh-sjtu-ppt ，帮我更新已有的插件。'
 const ASSET_HINT = {
   toc: '4:3 · 1200×900',
   content: '4:3 · 1600×1200',
@@ -1300,10 +1301,56 @@ function clearAll() {
   )
 }
 
+/* ── 更新检查 ─────────────────────────────────────────── */
+
+function applyUpdateState(data) {
+  if (!data || !data.ok || !els.updateBtn) return
+  const has = data.updateAvailable === true
+  els.updateBtn.classList.toggle('has-update', has)
+  if (els.updateDot) els.updateDot.hidden = !has
+  const label = has
+    ? `发现新版本 ${data.latest}（当前 ${data.current}），点击让 AI 更新`
+    : `当前已是最新版本 ${data.current}`
+  els.updateBtn.title = label
+  els.updateBtn.setAttribute('aria-label', `更新插件：${label}`)
+}
+
+async function checkUpdateAvailability() {
+  try {
+    const response = await fetch('/sjtu-ppt/api/version-check')
+    if (!response.ok) return
+    applyUpdateState(await response.json())
+  } catch {
+    /* 网络不通时静默，按钮仍可点 */
+  }
+}
+
+async function openUpdateConversation() {
+  const hasUpdate = els.updateBtn.classList.contains('has-update')
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({ type: 'sjtu-ppt:start', prompt: UPDATE_PROMPT }, location.origin)
+    toast(
+      hasUpdate
+        ? '已打开新对话，更新指令在输入框里。'
+        : '已打开新对话；当前已是最新版本，也可以让 AI 再检查一次。',
+      'ok',
+    )
+    return
+  }
+  try {
+    await navigator.clipboard.writeText(UPDATE_PROMPT)
+    toast('更新指令已复制，请在 DSH 新对话里粘贴。', 'ok')
+  } catch {
+    toast(`更新指令：${UPDATE_PROMPT}`, 'ok')
+  }
+}
+
 /* ── 初始化 ───────────────────────────────────────────── */
 
 async function boot() {
   els.grid = $('#templateGrid')
+  els.updateBtn = $('#updateBtn')
+  els.updateDot = $('#updateDot')
   els.tplPreview = $('#tplPreview')
   els.tplPreviewImg = $('#tplPreviewImg')
   els.tplPreviewCaption = $('#tplPreviewCaption')
@@ -1394,6 +1441,13 @@ async function boot() {
 
   loadRecent()
   loadMaterials()
+  checkUpdateAvailability()
+  setInterval(() => {
+    if (document.visibilityState === 'visible') checkUpdateAvailability()
+  }, 10 * 60 * 1000)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkUpdateAvailability()
+  })
 }
 
 function bind() {
@@ -1591,6 +1645,8 @@ function bind() {
     if (lastDeck) revealDeck(lastDeck.id)
   })
 
+  els.updateBtn.addEventListener('click', openUpdateConversation)
+
   els.resultEdit.addEventListener('click', () => {
     if (!lastDeck || !lastDeck.content) return
     applyQuickContent(lastDeck.content)
@@ -1612,6 +1668,9 @@ function bind() {
     if (!data || typeof data !== 'object') return
     if (data.type === 'sjtu-ppt:scheme' && (data.scheme === 'dark' || data.scheme === 'light')) {
       document.documentElement.dataset.scheme = data.scheme
+    }
+    if (data.type === 'sjtu-ppt:start-failed') {
+      toast(`打开新对话失败：${data.message || '未知错误'}`, 'error')
     }
   })
 }

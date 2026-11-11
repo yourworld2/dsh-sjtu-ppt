@@ -64,6 +64,24 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 
 有 HMR 时组合包列表变化会直接重组；没有 HMR 时重启 DSH。浏览器端模块在页面刷新后加载。
 
+## 更新
+
+插件首页右上角有「更新」按钮：
+
+- 打开页面时会读取 GitHub `main` 分支的 `package.json` 版本；比当前安装新时，按钮出现红点，悬停显示「发现新版本 vX（当前 vY）」。
+- 点击会打开一个新对话，输入框预填下面这句，不会自动发送：
+
+  ```
+  根据 https://github.com/yourworld2/dsh-sjtu-ppt ，帮我更新已有的插件。
+  ```
+
+  发送后由 AI 读取仓库并更新插件。
+- 作者发版时需要同时修改 `package.json` 的 `version` 并 push，红点才会出现；只改代码不改版本不会提示。
+- 每 10 分钟检查一次；网络不通时静默失败，按钮仍然可以点。
+- 更新完成后按 DSH 提示重启/刷新；材料和已生成文件在 `~/.dsh/sjtu-ppt`，不会丢。
+
+![有新版本时的更新按钮](docs/update.png)
+
 ## 两种做法
 
 ![两种制作模式](docs/modes.png)
