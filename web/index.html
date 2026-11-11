@@ -105,14 +105,9 @@
               <p class="kicker">03 / QUICK</p>
               <h2>快速出片</h2>
             </div>
-            <p class="block-note">AI 读材料、定结构，再套当前模板。生成后可下载，也可以继续逐页编辑。</p>
           </div>
           <div class="quick-grid">
             <div class="quick-desk">
-              <div class="quick-desk-head">
-                <span>材料</span>
-                <span>文件只留在本机</span>
-              </div>
               <div class="drop-zone quick-drop" id="dropZone" tabindex="0" role="button" aria-label="上传材料">
                 <svg class="drop-icon" viewBox="0 0 52 52" fill="none" aria-hidden="true">
                   <path d="M13 7h18l9 9v29a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.3" />
@@ -121,17 +116,13 @@
                 </svg>
                 <div class="drop-copy">
                   <strong>把材料拖到这里</strong>
-                  <span>或点击选择文件 · 支持 Word / PDF / Markdown / 表格 / 图片 · 单个 ≤ 25 MB</span>
+                  <span>或点击选择文件 · Word / PDF / Markdown / 表格 / 图片 · 单个 ≤ 25 MB · 文件只在本地</span>
+                  <span class="quick-empty" id="materialEmpty">还没有材料：上传后自动提取文字，AI 会先读材料再写；也可以不传，直接写补充要求。</span>
                 </div>
                 <span class="drop-count" id="materialCount">0 份</span>
                 <span class="drop-status" id="dropStatus" hidden></span>
               </div>
 
-              <div class="material-empty material-empty-quick" id="materialEmpty">
-                <span class="empty-glyph" aria-hidden="true">稿</span>
-                <strong>还没有材料</strong>
-                <span>上传后自动提取文字；AI 会先读材料再写。</span>
-              </div>
               <div class="material-list" id="materialList"></div>
               <div class="material-foot" id="materialFoot" hidden>
                 <span id="materialSummary">—</span>
@@ -149,20 +140,19 @@
                 <textarea id="quickBrief" rows="4" maxlength="1500" placeholder="例如：给学院做 15 分钟汇报，重点讲三个项目，语气正式。"></textarea>
               </label>
               <div class="quick-pages">
-                <span class="quick-label">页数</span>
-                <div class="page-options" id="quickPages" role="group" aria-label="生成页数">
-                  <button type="button" data-pages="6">6</button>
-                  <button type="button" data-pages="8" class="active" aria-pressed="true">8</button>
-                  <button type="button" data-pages="10">10</button>
-                  <button type="button" data-pages="12">12</button>
+                <label class="quick-label" for="quickPagesInput">页数</label>
+                <div class="pages-field">
+                  <input id="quickPagesInput" type="number" min="4" max="20" step="1" inputmode="numeric" placeholder="自动" aria-describedby="quickPagesHint" />
+                  <span>页</span>
                 </div>
               </div>
+              <p class="quick-hint" id="quickPagesHint">留空时由 AI 按材料判断，通常 6–12 页（含封面）。</p>
               <button class="btn primary lg quick-generate" id="quickGenerate" type="button">
                 <span class="spinner" id="quickSpinner" hidden></span>
                 <span id="quickLabel">AI 分析并生成 PPTX</span>
               </button>
               <p class="quick-status" id="quickStatus" hidden></p>
-              <p class="quick-note">调用当前 DSH 模型，通常 30–90 秒。生成后可直接下载，也可以继续逐页编辑。</p>
+              <p class="quick-note">AI 读材料、定结构，再套当前模板 · 通常 30–90 秒 · 生成后可继续逐页编辑。</p>
             </aside>
           </div>
           <input type="file" id="materialInput" multiple hidden accept=".doc,.docx,.pdf,.md,.markdown,.txt,.csv,.json,.html,.htm,.rtf,.ppt,.pptx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif" />

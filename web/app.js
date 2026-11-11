@@ -29,7 +29,7 @@ const state = {
   materials: [],
   coverAssets: [],
   mode: 'quick',
-  quickPages: 8,
+  quickPages: null,
 }
 
 let lastDeck = null
@@ -1055,13 +1055,16 @@ function coverAssetHintText() {
 }
 
 function setQuickPages(pages) {
-  const next = [6, 8, 10, 12].includes(Number(pages)) ? Number(pages) : 8
+  const n = Number.parseInt(pages, 10)
+  const next = Number.isFinite(n) && n >= 4 ? Math.min(20, n) : null
   state.quickPages = next
-  for (const button of $$('#quickPages button')) {
-    const active = Number(button.dataset.pages) === next
-    button.classList.toggle('active', active)
-    button.setAttribute('aria-pressed', active ? 'true' : 'false')
-  }
+  if (els.quickPages) els.quickPages.value = next ? String(next) : ''
+}
+
+function readQuickPages() {
+  const raw = els.quickPages ? els.quickPages.value.trim() : ''
+  const n = Number.parseInt(raw, 10)
+  return Number.isFinite(n) && n >= 4 ? Math.min(20, n) : null
 }
 
 function setMode(mode, { scroll = true } = {}) {
@@ -1110,6 +1113,12 @@ async function runQuick() {
     els.dropZone.scrollIntoView({ behavior: 'smooth', block: 'center' })
     return
   }
+  const pages = readQuickPages()
+  state.quickPages = pages
+  if (els.quickPages) {
+    if (pages) els.quickPages.value = String(pages)
+    else if (els.quickPages.value.trim()) els.quickPages.value = ''
+  }
   setQuickBusy(true, '正在读材料…')
   const analysis = setTimeout(() => setQuickBusy(true, 'AI 正在分析材料…'), 1200)
   const layout = setTimeout(() => setQuickBusy(true, '正在套模板排版…'), 15_000)
@@ -1121,7 +1130,7 @@ async function runQuick() {
         template: state.tId,
         brief,
         materialIds: materials.map((m) => m.id),
-        pages: state.quickPages,
+        pages,
       }),
     })
     const data = await response.json().catch(() => ({}))
@@ -1388,7 +1397,7 @@ async function boot() {
   els.buildBar = $('#buildBar')
   els.quickTemplateName = $('#quickTemplateName')
   els.quickBrief = $('#quickBrief')
-  els.quickPages = $('#quickPages')
+  els.quickPages = $('#quickPagesInput')
   els.quickGenerate = $('#quickGenerate')
   els.quickSpinner = $('#quickSpinner')
   els.quickLabel = $('#quickLabel')
@@ -1518,10 +1527,11 @@ function bind() {
   for (const card of $$('.mode-card')) {
     card.addEventListener('click', () => setMode(card.dataset.mode))
   }
-  els.quickPages.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-pages]')
-    if (button) setQuickPages(button.dataset.pages)
+  els.quickPages.addEventListener('input', () => {
+    const n = Number.parseInt(els.quickPages.value, 10)
+    state.quickPages = Number.isFinite(n) && n >= 4 ? Math.min(20, n) : null
   })
+  els.quickPages.addEventListener('change', () => setQuickPages(els.quickPages.value))
   els.quickGenerate.addEventListener('click', runQuick)
 
   els.dropZone.addEventListener('click', () => {
