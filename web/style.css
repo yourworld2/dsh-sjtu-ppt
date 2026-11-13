@@ -2180,6 +2180,12 @@ html[data-scheme="dark"] .ext-xls {
   color: var(--ink-2);
 }
 
+.tip-card a {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* ── slides ───────────────────────────────────────────── */
 
 .compose-main {
