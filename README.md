@@ -1,9 +1,9 @@
 # 交大演示 · dsh-sjtu-ppt
 
-把 **SJTU-PPT-Skill** 的八套上海交大模板装进 DeepSeek Harness：侧栏多一个「交大演示」入口。可以做两种事：把材料交给 AI 直接出片，或者逐页编辑；生成的 `.pptx` 都能继续改。
+把 **SJTU-PPT-Skill** 的九套上海交大模板装进 DeepSeek Harness：侧栏多一个「交大演示」入口。可以做两种事：把材料交给 AI 直接出片，或者逐页编辑；生成的 `.pptx` 都能继续改。
 
 - 左侧栏入口，页面在 iframe 里，明暗跟随 DSH
-- 8 套内置模板：basic / 130 / wine / crimson / origin / star / blue / global
+- 9 套内置模板：basic / 2026 / 130 / wine / crimson / origin / star / blue / global
 - 5 种版式：封面、目录、内页、过渡页、封底
 - 模板永远在第一个版块；两种模式共用同一套模板和草稿
 - 快速生成：材料 → AI 分析 → 套模板直接出片，面板内一键生成，不跳对话
@@ -146,6 +146,7 @@ node "/Applications/DeepSeek Harness.app/Contents/Resources/runtime/primary-runt
 | id | 名称 | 特点 |
 | --- | --- | --- |
 | `basic` | 交大红 | 校门线稿、交大红主色，默认款 |
+| `2026` | 2026新版 | 红金封面、白底红标题内页 |
 | `130` | 校庆130 | 校庆红横线，正式典礼 |
 | `wine` | 酒红 | 酒红斜切 + 饮水思源碑实景 |
 | `crimson` | 深红 | 红色圆弧、大留白 |
@@ -224,7 +225,7 @@ lib/tool.js       sjtu_ppt_generate 工具
 lib/generate.js   校验内容 → 调 Python → 落盘 / 登记
 lib/python.js     找 python-pptx（优先 DSH 自带运行时）
 lib/store.js      $DSH_HOME/sjtu-ppt/out 与 meta
-lib/templates.js  8 套模板的展示元信息
+lib/templates.js  9 套模板的展示元信息
 lib/client.js     浏览器半边：侧栏入口 + iframe + 主题同步
 web/              工作台页面
 skills/sjtu-ppt/  上游技能的 vendored 快照
@@ -236,7 +237,7 @@ skills/sjtu-ppt/  上游技能的 vendored 快照
 
 ## 上游与改动
 
-技能与 8 套模板来自 [yourworld2/SJTU-PPT-Skill](https://github.com/yourworld2/SJTU-PPT-Skill)（MIT，模板作者：李一 / 徐臻 / 迮佳 / 沈小丹 / 国际处）。插件内是 vendored 快照，不依赖外网。
+技能与 9 套模板来自 [yourworld2/SJTU-PPT-Skill](https://github.com/yourworld2/SJTU-PPT-Skill)（MIT，模板作者：李一 / 徐臻 / 迮佳 / 沈小丹 / 国际处）。插件内是 vendored 快照，不依赖外网。
 
 为了让插件里的封面和封底更可靠，生成脚本做了几处向后兼容的修补：
 

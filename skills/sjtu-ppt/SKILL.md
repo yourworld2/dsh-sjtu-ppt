@@ -1,6 +1,6 @@
 ---
 name: sjtu-ppt
-description: 用上海交通大学（SJTU）8 套内置模板把大纲或结构化 JSON 排成可编辑的 .pptx；用户要做交大风格的汇报、答辩、校庆、学术报告、典礼或课程分享 PPT 时使用。
+description: 用上海交通大学（SJTU）9 套内置模板把大纲或结构化 JSON 排成可编辑的 .pptx；用户要做交大风格的汇报、答辩、校庆、学术报告、典礼或课程分享 PPT 时使用。
 author: liyi@sjtu.edu.cn
 dependency:
   python:
@@ -16,16 +16,16 @@ dependency:
 
 ## 前置准备
 - 依赖说明：`python-pptx==0.6.23`
-- 模板文件：用户可上传自己的 `.pptx` 模板；若未提供，则默认使用内置的 SJTU-basic 模板。也可选择内置的 SJTU-wine、SJTU-130、SJTU-crimson、SJTU-origin、SJTU-star、SJTU-blue 或 SJTU-global 模板。
+- 模板文件：用户可上传自己的 `.pptx` 模板；若未提供，则默认使用内置的 SJTU-basic 模板。也可选择内置的 SJTU-2026、SJTU-wine、SJTU-130、SJTU-crimson、SJTU-origin、SJTU-star、SJTU-blue 或 SJTU-global 模板。
 - 图片填充：SJTU-origin 模板支持在封面和过渡页填充自定义图片（需图片占位符）。JSON 中封面通过 `cover_image` 字段、过渡页通过 `image` 字段指定图片路径。
-- 页码控制：顶层 JSON 的 `page_numbers` 字段（默认 `true`）控制是否启用页码；单个 slide 可通过 `page_numbers: false` 覆盖。默认隐藏封面/目录/封底/过渡页的页码，仅显示内页页码。仅当模板含 SLIDE_NUMBER 占位符时生效（当前 8 个内置模板均支持：SJTU-basic / SJTU-130 / SJTU-blue / SJTU-crimson / SJTU-global / SJTU-origin / SJTU-star / SJTU-wine）。
+- 页码控制：顶层 JSON 的 `page_numbers` 字段（默认 `true`）控制是否启用页码；单个 slide 可通过 `page_numbers: false` 覆盖。默认隐藏封面/目录/封底/过渡页的页码，仅显示内页页码。仅当模板含 SLIDE_NUMBER 占位符时生效（basic / 130 / wine / crimson / origin / star / blue / global 支持；SJTU-2026 按原型设计不显示页码）。
 - 内置模板获取：所有内置模板均位于 `assets/` 目录下，是标准 `.pptx` 文件。用户可直接复制到本地工作区，在 PowerPoint 中打开编辑或另存为 `.potx` 模板文件使用。
 - 内容文件：用户需提供符合规范的 JSON 文件，定义标题和各页幻灯片内容。
 
 ## 操作步骤
 1. **确认模板** — 询问用户是否上传模板；如无，先调用模板索引脚本查看当前可用内置模板列表，再让用户选择。
    - 查看可用模板：`python scripts/list_templates.py --assets-dir assets`
-   - 当前内置模板：SJTU-basic（默认）、SJTU-wine、SJTU-130、SJTU-crimson、SJTU-origin、SJTU-star、SJTU-blue、SJTU-global。
+   - 当前内置模板：SJTU-basic（默认）、SJTU-2026（2026新版）、SJTU-wine、SJTU-130、SJTU-crimson、SJTU-origin、SJTU-star、SJTU-blue、SJTU-global。
 2. **确认内容** — 引导用户提供或编写 JSON 内容定义。
    - 内容格式规范见 [references/content-format.md](references/content-format.md)。
    - 若用户仅提供文字大纲，由智能体将其转换为合规 JSON。
@@ -38,7 +38,7 @@ dependency:
 ## 可选分支
 - 当用户需要查看可用模板时：执行 `python scripts/list_templates.py --assets-dir assets`，获取所有内置模板的布局、占位符等详细信息。
 - 当用户需要预设模板时：执行 `python scripts/generate_pptx.py --create-template ./my-template.pptx`，获得一个基础模板后再填充内容。
-- 当用户想下载内置模板自行使用时：将 `assets/` 目录下的 `.pptx` 文件复制到用户工作区即可。这些文件是标准 PowerPoint 演示文稿，可直接打开编辑，也可另存为 `.potx` 模板格式。当前内置模板包括：SJTU-basic、SJTU-wine、SJTU-130、SJTU-crimson、SJTU-origin、SJTU-star、SJTU-blue、SJTU-global。
+- 当用户想下载内置模板自行使用时：将 `assets/` 目录下的 `.pptx` 文件复制到用户工作区即可。这些文件是标准 PowerPoint 演示文稿，可直接打开编辑，也可另存为 `.potx` 模板格式。当前内置模板包括：SJTU-basic、SJTU-2026、SJTU-wine、SJTU-130、SJTU-crimson、SJTU-origin、SJTU-star、SJTU-blue、SJTU-global。
 - 当用户上传新模板到 assets/ 目录时：先执行 `list_templates.py` 刷新索引，确认新模板被识别后，再将其纳入用户可选项，并同步更新 SKILL.md 中模板列表描述。
 - 当用户内容超长时：建议拆分多个 JSON 或合并要点，确保单页不溢出。
 - 当用户使用内置模板时：JSON 中的 `layout` 字段支持 `cover`（封面）、`toc`（目录）、`content`（内页）、`section`（过渡页）、`end`（封底）五种类型。
@@ -66,6 +66,7 @@ dependency:
 - 脚本：见 [scripts/smoke_test.py](scripts/smoke_test.py)（用途：smoke 回归测试，对每个内置模板跑 4 类检查：基础生成 / 双栏回归 / 页码 / 嵌套 bullet，外加 1 个全局检查（图片缺失给 warning 不崩溃）。运行：`python scripts/smoke_test.py`，exit 0 = 全部通过，1 = 有失败）
 - 参考：见 [references/content-format.md](references/content-format.md)（何时读取：编写或校验内容 JSON 时）
 - 资产：见 [assets/SJTU-basic.pptx](assets/SJTU-basic.pptx)（默认内置模板：SJTU-basic 交大红主题，含封面/目录/内页/过渡页/封底五种布局；内页支持页码）
+- 资产：见 [assets/SJTU-2026.pptx](assets/SJTU-2026.pptx)（2026新版：红金封面、白底红标题内页；成品稿专用生成路径，仅单栏内容版式，无图片占位和页码）
 - 资产：见 [assets/SJTU-wine.pptx](assets/SJTU-wine.pptx)（可选内置模板：SJTU-wine 酒红主题，配色为红 RGB(166,32,56)、浅金 RGB(224,207,189)、灰 RGB(191,191,191)，含封面/目录/过渡页/正文页/封底五种布局；目录/内页/过渡页支持页码）
 - 资产：见 [assets/SJTU-130.pptx](assets/SJTU-130.pptx)（可选内置模板：SJTU-130 红色主题，含封面/目录/内页/过渡页/封底五种布局；内页支持页码）
 - 资产：见 [assets/SJTU-crimson.pptx](assets/SJTU-crimson.pptx)（可选内置模板：SJTU-crimson 深红主题，含封面/目录/过渡页/正文页/封底五种布局；目录/内页/过渡页支持页码）
@@ -74,7 +75,7 @@ dependency:
 - 资产：见 [assets/SJTU-blue.pptx](assets/SJTU-blue.pptx)（可选内置模板：SJTU-blue 蓝色主题，含封面/目录/过渡页/正文页/封底五种布局；目录/内页支持页码）
 - 资产：见 [assets/SJTU-global.pptx](assets/SJTU-global.pptx)（可选内置模板：SJTU-global 蓝色商务主题，含封面/目录/过渡页/正文页/封底五种布局；内页/过渡页/封底支持页码）
 
-> 模板作者备注：basic、origin、130 模板作者：李一；wine、crimson 模板作者：徐臻；star 模板作者：迮佳；blue 模板作者：沈小丹；global 模板：国际处。
+> 模板作者备注：basic、origin、130 模板作者：李一；wine、crimson、2026 模板作者：徐臻；star 模板作者：迮佳；blue 模板作者：沈小丹；global 模板：国际处。
 
 ## 注意事项
 - 目录有几个章节，就要有几张 `section` 过渡页；每章开头一张，顺序与目录一致，不要用一张过渡页带过所有章节。

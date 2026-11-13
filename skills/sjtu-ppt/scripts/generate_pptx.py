@@ -749,6 +749,10 @@ def put_meta(shape, parts, allow_two_lines=False):
 
 
 def generate_presentation(template_path, content_json, output_path):
+    if os.path.basename(str(template_path)).lower() == "sjtu-2026.pptx":
+        from generate_2026 import generate_2026_presentation
+        return generate_2026_presentation(template_path, content_json, output_path)
+
     prs = Presentation(template_path)
     clear_template_slides(prs)
     alias_map, canonical_map = get_layout_map(prs)
